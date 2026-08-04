@@ -1,11 +1,11 @@
 # EADN Birthday Pre-Order
 
 Food pre-ordering for a birthday dinner at [EADN St. Paul's](https://eadnstpauls.co.uk/),
-Thursday 6 August 2026. Six guests. £35 each on their own plate, a shared £120
+Thursday 6 August 2026. Six guests. £45 each on their own plate, a shared £120
 table pot for starters and sides, drinks on the host.
 
-The guest page is a five-step flow built for a phone: welcome, table pot, your
-plate, drinks, review.
+The guest page is a five-step flow built for a phone: welcome, table pot, main,
+dessert, drinks, review.
 
 Static site on GitHub Pages, Supabase for storage. No build step.
 

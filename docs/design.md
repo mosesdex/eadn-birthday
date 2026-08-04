@@ -13,7 +13,9 @@ independent orders have to collapse into one order the restaurant can act on.
 
 | Decision | Choice | Why |
 |---|---|---|
-| Cap style | £45 per guest, £270 table | Guests order independently; no live contention over a shared pot |
+| Personal cap | £45 per guest | Mains and desserts; sized so any main still leaves room for dessert |
+| Shared pot | £120 across the table | Starters and sides land in the middle; drained first come, first served |
+| Table total | £390 | 6 x £45 + £120 |
 | Enforcement | Server-side in Postgres | A client-only cap is bypassable from devtools |
 | Access | One tokenised link per guest | No signup, no password, no friction two days before the event |
 | Drinks | Cocktail picker, 2 per guest, host pays | Host wanted visibility on the bar spend without charging guests |
