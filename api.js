@@ -13,6 +13,7 @@ const ERRORS = {
   unknown_pot_item: "That one can't go in the table pot.",
   unknown_cocktail: "That cocktail isn't on the list.",
   bad_quantity: 'Invalid quantity.',
+  nothing_chosen: 'Choose something to eat first.',
   bad_payload: 'Something went wrong with that order.',
   bad_name: 'Name must be 1-40 characters.',
 };

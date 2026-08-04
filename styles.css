@@ -869,3 +869,6 @@ main { position: relative; z-index: 1; }
 
 /* Anchors styled as buttons need the flex centring buttons get for free. */
 a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+
+/* The "nothing chosen" prompt on the review step and its shortcut. */
+#sentNotice .btn { margin-top: var(--s2); }

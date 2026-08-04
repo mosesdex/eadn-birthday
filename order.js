@@ -44,6 +44,8 @@ const potLeft = () => Number(state.rules.pot_per_guest) - sumOf(state.pot);
 const potItemsLeft = () => Number(state.rules.pot_item_cap) - countOf(state.pot);
 const cocktailsLeft = () => Number(state.rules.cocktail_cap) - countOf(state.cocktails);
 
+const hasFood = () => countOf(state.food) + countOf(state.pot) > 0;
+
 const bucketOf = (name) =>
   name === 'pot' ? state.pot : name === 'food' ? state.food : state.cocktails;
 
@@ -255,6 +257,22 @@ function renderReview() {
 
   const box = el('sentNotice');
   box.textContent = '';
+
+  if (!hasFood()) {
+    const n = document.createElement('p');
+    n.className = 'notice warn';
+    n.textContent = 'Pick at least one thing to eat before you send this over.';
+    box.appendChild(n);
+
+    const jump = document.createElement('button');
+    jump.type = 'button';
+    jump.className = 'btn sm ghost';
+    jump.textContent = 'Choose a main';
+    jump.onclick = () => goto(2);
+    box.appendChild(jump);
+    return;
+  }
+
   if (state.submitted) {
     const n = document.createElement('p');
     n.className = 'notice';
@@ -279,7 +297,7 @@ function navCopy() {
     next.textContent = state.submitted
       ? 'Update my order'
       : `Send to ${state.rules.venue}`;
-    context.textContent = '';
+    context.textContent = hasFood() ? '' : 'Nothing chosen yet';
   } else {
     const picked = pickedIn(step);
     next.textContent = picked ? 'Next' : `Skip ${step.label.toLowerCase()}`;
@@ -293,7 +311,7 @@ function navCopy() {
     }
   }
 
-  next.disabled = state.step === LAST && state.rules.locked;
+  next.disabled = state.step === LAST && (state.rules.locked || !hasFood());
 }
 
 function goto(n) {
