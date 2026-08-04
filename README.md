@@ -1,7 +1,11 @@
 # EADN Birthday Pre-Order
 
 Food pre-ordering for a birthday dinner at [EADN St. Paul's](https://eadnstpauls.co.uk/),
-Thursday 6 August 2026. Six guests, £45 each on food, drinks on the host.
+Thursday 6 August 2026. Six guests. £35 each on their own plate, a shared £120
+table pot for starters and sides, drinks on the host.
+
+The guest page is a five-step flow built for a phone: welcome, table pot, your
+plate, drinks, review.
 
 Static site on GitHub Pages, Supabase for storage. No build step.
 
@@ -40,10 +44,11 @@ That is the intended design here, not an oversight — the functions *are* the A
 ## Schema
 
 ```
-bday_config   singleton: host_token, food_cap, table_cap, cocktail_cap, locked
+bday_config   singleton: host_token, food_cap, pot_cap, table_cap, cocktail_cap, locked
 bday_guests   id, token, name, seat
-bday_menu     id, section, name, description, price, kind ('food'|'cocktail'), note
-bday_orders   guest_id, food jsonb, cocktails jsonb, food_total, submitted_at
+bday_menu     id, section, name, description, price, kind, note, pot_eligible
+bday_orders   guest_id, food jsonb, pot jsonb, cocktails jsonb,
+              food_total, pot_total, submitted_at
 ```
 
 Orders store `[{id, qty}]` only. Prices are always resolved from `bday_menu` at
@@ -55,7 +60,7 @@ read and write time, so a menu price change reprices existing orders correctly.
 |---|---|---|
 | `bday_menu_and_rules()` | none | menu + caps + event details |
 | `bday_get_guest(token)` | guest token | name and saved order |
-| `bday_save_order(token, food, cocktails, submit)` | guest token | validate and save |
+| `bday_save_order(token, food, pot, cocktails, submit)` | guest token | validate and save |
 | `bday_host_summary(host_token)` | host token | everything, plus merged kitchen list |
 | `bday_host_rename_guest(host_token, id, name)` | host token | set a guest's name |
 | `bday_host_set_lock(host_token, locked)` | host token | freeze all orders |
@@ -63,7 +68,7 @@ read and write time, so a menu price change reprices existing orders correctly.
 ## Changing the numbers
 
 ```sql
-update bday_config set food_cap = 50, table_cap = 300, cocktail_cap = 3 where id = 1;
+update bday_config set food_cap = 40, pot_cap = 150, table_cap = 390, cocktail_cap = 3 where id = 1;
 ```
 
 Menu edits go straight into `bday_menu`; the site picks them up on next load.

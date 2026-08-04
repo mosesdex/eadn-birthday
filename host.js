@@ -38,13 +38,18 @@ function lineItem(line, showMoney = true) {
 }
 
 function renderStats() {
-  const total = Number(data.table_food_total);
+  const personal = Number(data.table_food_total);
+  const pot = Number(data.pot_used);
+  const total = personal + pot;
   const cap = Number(data.rules.table_cap);
   const submitted = data.guests.filter((g) => g.submitted_at).length;
   const barTotal = data.bar.reduce((s, b) => s + Number(b.line_total), 0);
 
   el('statTotal').textContent = money(total);
   el('statTotal').classList.toggle('over', total > cap);
+  el('statBreakdown').textContent = `${money(personal)} personal + ${money(pot)} pot`;
+  el('statPot').textContent = `${money(pot)} / ${money(data.rules.pot_cap)}`;
+  el('statPot').classList.toggle('over', pot > Number(data.rules.pot_cap));
   el('statCap').textContent = money(cap);
   el('statSubmitted').textContent = `${submitted} / ${data.guests.length}`;
   el('statCocktails').textContent = money(barTotal);
@@ -135,15 +140,25 @@ function renderGuests() {
 
     const spend = document.createElement('span');
     spend.className = 'pill';
-    spend.textContent = money(g.food_total);
+    spend.textContent = `${money(g.food_total)} own`;
 
-    head.append(nameInput, pill, spend);
+    const potSpend = document.createElement('span');
+    potSpend.className = 'pill';
+    potSpend.textContent = `${money(g.pot_total)} pot`;
+
+    head.append(nameInput, pill, spend, potSpend);
     card.appendChild(head);
 
-    if (g.food_lines.length || g.cocktail_lines.length) {
+    if (g.food_lines.length || g.pot_lines.length || g.cocktail_lines.length) {
       const lines = document.createElement('ul');
       lines.className = 'lines';
       g.food_lines.forEach((l) => lines.appendChild(lineItem(l)));
+      g.pot_lines.forEach((l) => {
+        const li = lineItem(l);
+        li.title = 'For the table';
+        li.style.color = 'var(--gold-soft)';
+        lines.appendChild(li);
+      });
       g.cocktail_lines.forEach((l) => {
         const li = lineItem(l, false);
         li.style.color = 'var(--gold-soft)';
@@ -183,7 +198,7 @@ function orderAsText() {
     'FOOD',
     ...data.kitchen.map((k) => `${k.qty}x ${k.name}  (${money(k.line_total)})`),
     '',
-    `Food total: ${money(data.table_food_total)}`,
+    `Food total: ${money(Number(data.table_food_total) + Number(data.pot_used))}`,
   ];
 
   if (data.bar.length) {

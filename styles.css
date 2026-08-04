@@ -388,3 +388,148 @@ body {
 .muted { color: var(--muted); }
 .center { text-align: center; }
 .small { font-size: 0.85rem; }
+
+/* ============ guided step flow ============ */
+
+.progress {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  padding: 0.85rem 1rem 0;
+}
+
+.progress i {
+  width: 26px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--line);
+  transition: background 0.2s ease;
+}
+
+.progress i.done { background: rgba(201, 162, 39, 0.45); }
+.progress i.now { background: var(--gold); }
+
+.step { display: none; animation: rise 0.28s ease both; }
+.step.active { display: block; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step { animation: none; }
+  .meter span { transition: none; }
+}
+
+.step-kicker {
+  color: var(--gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 1.5rem 0 0.4rem;
+}
+
+.step-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 5.5vw, 2rem);
+  text-align: center;
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.step-lede {
+  text-align: center;
+  color: var(--muted);
+  margin: 0 auto 1.5rem;
+  max-width: 30rem;
+  font-size: 0.95rem;
+}
+
+/* welcome screen */
+
+.welcome-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 1rem;
+  margin-bottom: 0.7rem;
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.welcome-card .icon { font-size: 1.5rem; line-height: 1; }
+.welcome-card h3 { margin: 0 0 0.2rem; font-size: 1rem; }
+.welcome-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+/* the pot meter */
+
+.pot-bar {
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.1), transparent);
+  border-radius: var(--radius);
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.pot-bar .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.pot-bar .amount { font-size: 1.15rem; font-weight: 700; color: var(--gold-soft); }
+
+/* review step */
+
+.review-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.review-block h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.review-empty { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+.grand {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  margin-top: 0.9rem;
+}
+
+.grand b { font-size: 1.35rem; }
+
+/* nav */
+
+.navbar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.navbar-inner .btn { flex: 1; }
+.navbar-inner .btn.ghost { flex: 0 0 auto; }
+
+.done-mark {
+  text-align: center;
+  font-size: 3.5rem;
+  margin: 1rem 0 0;
+}

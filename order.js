@@ -1,21 +1,38 @@
 import { rpc, money, param, toLines, toCounts, friendlyError } from './api.js';
 
 const TOKEN = param('t');
-const FOOD_ORDER = ['Small Plates', 'Large Plates', 'Sides', 'Desserts'];
+const STEPS = 5; // welcome, pot, personal, drinks, review
+const POT_SECTIONS = ['Small Plates', 'Sides'];
+const OWN_SECTIONS = ['Large Plates', 'Desserts'];
 
 const el = (id) => document.getElementById(id);
-const state = { menu: [], rules: null, food: {}, cocktails: {}, submitted: false };
+
+const state = {
+  menu: [],
+  rules: null,
+  step: 0,
+  food: {},      // personal — large plates + desserts
+  pot: {},       // shared table plates
+  cocktails: {},
+  potUsedByOthers: 0,
+  submitted: false,
+};
 
 let saveTimer = null;
 let toastTimer = null;
 
-/* ---------------- helpers ---------------- */
+/* ---------------- totals ---------------- */
 
-const foodTotal = () =>
-  state.menu.reduce((sum, m) => sum + (m.kind === 'food' ? m.price * (state.food[m.id] || 0) : 0), 0);
+const priceOf = (id) => state.menu.find((m) => m.id === id)?.price ?? 0;
+const sum = (counts) => Object.entries(counts).reduce((t, [id, q]) => t + priceOf(id) * q, 0);
 
-const cocktailCount = () =>
-  Object.values(state.cocktails).reduce((a, b) => a + b, 0);
+const foodTotal = () => sum(state.food);
+const potMine = () => sum(state.pot);
+const potRemaining = () =>
+  Math.max(0, Number(state.rules.pot_cap) - state.potUsedByOthers - potMine());
+const cocktailCount = () => Object.values(state.cocktails).reduce((a, b) => a + b, 0);
+
+/* ---------------- chrome ---------------- */
 
 function toast(msg, kind = '') {
   clearTimeout(toastTimer);
@@ -27,25 +44,29 @@ function toast(msg, kind = '') {
   toastTimer = setTimeout(() => node.remove(), 3200);
 }
 
-const cacheKey = () => `bday_draft_${TOKEN}`;
-
-function cacheDraft() {
-  try {
-    localStorage.setItem(cacheKey(), JSON.stringify({ food: state.food, cocktails: state.cocktails }));
-  } catch { /* private browsing — the server copy is the real one */ }
+function renderProgress() {
+  const bar = el('progress');
+  bar.textContent = '';
+  for (let i = 0; i < STEPS; i++) {
+    const dot = document.createElement('i');
+    if (i < state.step) dot.className = 'done';
+    if (i === state.step) dot.className = 'now';
+    bar.appendChild(dot);
+  }
 }
 
-/* ---------------- rendering ---------------- */
+// The sticky meter only means something on the personal-budget step.
+function renderBudgetBar() {
+  const show = state.step === 2;
+  el('budgetBar').hidden = !show;
+  if (!show) return;
 
-function renderBudget() {
   const cap = Number(state.rules.food_cap);
   const total = foodTotal();
-  const left = Math.max(0, cap - total);
   const ratio = cap > 0 ? Math.min(1, total / cap) : 0;
 
-  el('budgetLeft').textContent = `${money(left)} left`;
+  el('budgetLeft').textContent = `${money(Math.max(0, cap - total))} left`;
   el('budgetCap').textContent = `${money(total)} of ${money(cap)}`;
-  el('footTotal').textContent = money(total);
   el('meterFill').style.transform = `scaleX(${ratio})`;
 
   const meter = el('meter');
@@ -53,15 +74,36 @@ function renderBudget() {
   meter.classList.toggle('full', ratio >= 1);
 }
 
-function itemRow(m) {
-  const isFood = m.kind === 'food';
-  const counts = isFood ? state.food : state.cocktails;
-  const qty = counts[m.id] || 0;
+function renderPotBar() {
+  const cap = Number(state.rules.pot_cap);
+  const used = state.potUsedByOthers + potMine();
+  const ratio = cap > 0 ? Math.min(1, used / cap) : 0;
 
-  const remaining = Number(state.rules.food_cap) - foodTotal();
-  const blocked = isFood
-    ? m.price > remaining
-    : cocktailCount() >= Number(state.rules.cocktail_cap);
+  el('potLeft').textContent = `${money(potRemaining())} left`;
+  el('potUsed').textContent = `${money(potMine())} added by you`;
+  el('potFill').style.transform = `scaleX(${ratio})`;
+
+  const meter = el('potMeter');
+  meter.classList.toggle('warn', ratio >= 0.78 && ratio < 1);
+  meter.classList.toggle('full', ratio >= 1);
+}
+
+/* ---------------- items ---------------- */
+
+function bucketFor(item) {
+  if (item.kind === 'cocktail') return state.cocktails;
+  return item.pot_eligible ? state.pot : state.food;
+}
+
+function isBlocked(item) {
+  if (item.kind === 'cocktail') return cocktailCount() >= Number(state.rules.cocktail_cap);
+  if (item.pot_eligible) return item.price > potRemaining();
+  return item.price > Number(state.rules.food_cap) - foodTotal();
+}
+
+function itemRow(m) {
+  const qty = bucketFor(m)[m.id] || 0;
+  const blocked = isBlocked(m);
 
   const row = document.createElement('div');
   row.className = `item${qty > 0 ? ' picked' : ''}${blocked && qty === 0 ? ' blocked' : ''}`;
@@ -75,16 +117,16 @@ function itemRow(m) {
   main.appendChild(name);
 
   if (m.description) {
-    const desc = document.createElement('div');
-    desc.className = 'item-desc';
-    desc.textContent = m.description;
-    main.appendChild(desc);
+    const d = document.createElement('div');
+    d.className = 'item-desc';
+    d.textContent = m.description;
+    main.appendChild(d);
   }
   if (m.note) {
-    const note = document.createElement('span');
-    note.className = 'item-note';
-    note.textContent = m.note;
-    main.appendChild(note);
+    const n = document.createElement('span');
+    n.className = 'item-note';
+    n.textContent = m.note;
+    main.appendChild(n);
   }
 
   const right = document.createElement('div');
@@ -122,68 +164,131 @@ function itemRow(m) {
   return row;
 }
 
-function render() {
-  const foodWrap = el('foodSections');
-  foodWrap.textContent = '';
+function fillList(node, sections, kind) {
+  node.textContent = '';
+  const groups = kind === 'cocktail' ? [null] : sections;
 
-  for (const section of FOOD_ORDER) {
-    const items = state.menu.filter((m) => m.kind === 'food' && m.section === section);
+  for (const section of groups) {
+    const items = state.menu.filter((m) =>
+      kind === 'cocktail' ? m.kind === 'cocktail' : m.kind === 'food' && m.section === section);
     if (!items.length) continue;
 
-    const title = document.createElement('h2');
-    title.className = 'section-title';
-    title.textContent = section;
-    foodWrap.appendChild(title);
-    items.forEach((m) => foodWrap.appendChild(itemRow(m)));
+    if (section) {
+      const h = document.createElement('h3');
+      h.className = 'section-title';
+      h.textContent = section;
+      node.appendChild(h);
+    }
+    items.forEach((m) => node.appendChild(itemRow(m)));
   }
-
-  const ckWrap = el('cocktailList');
-  ckWrap.textContent = '';
-  state.menu.filter((m) => m.kind === 'cocktail').forEach((m) => ckWrap.appendChild(itemRow(m)));
-
-  el('ckCap').textContent = state.rules.cocktail_cap;
-  renderBudget();
-  renderStatus();
 }
 
-function renderStatus() {
-  const box = el('statusBanner');
-  box.textContent = '';
+/* ---------------- review ---------------- */
 
-  if (state.rules.locked) {
-    const b = document.createElement('div');
-    b.className = 'banner warn';
-    b.textContent = 'Orders are locked in. Talk to Dex if you need a change.';
-    box.appendChild(b);
+function fillReview(node, counts, showMoney = true) {
+  node.textContent = '';
+  const entries = Object.entries(counts).filter(([, q]) => q > 0);
+
+  if (!entries.length) {
+    const li = document.createElement('li');
+    li.className = 'review-empty';
+    li.textContent = 'Nothing picked.';
+    node.appendChild(li);
     return;
   }
+
+  for (const [id, qty] of entries) {
+    const m = state.menu.find((x) => x.id === id);
+    if (!m) continue;
+
+    const li = document.createElement('li');
+    const left = document.createElement('span');
+    const badge = document.createElement('span');
+    badge.className = 'qty-badge';
+    badge.textContent = `${qty}×`;
+    left.append(badge, document.createTextNode(m.name));
+    li.appendChild(left);
+
+    if (showMoney) {
+      const right = document.createElement('span');
+      right.textContent = money(m.price * qty);
+      li.appendChild(right);
+    }
+    node.appendChild(li);
+  }
+}
+
+function renderReview() {
+  fillReview(el('revPot'), state.pot);
+  fillReview(el('revFood'), state.food);
+  fillReview(el('revCk'), state.cocktails, false);
+  el('revTotal').textContent = money(foodTotal());
+
+  const box = el('doneBanner');
+  box.textContent = '';
   if (state.submitted) {
     const b = document.createElement('div');
     b.className = 'banner';
-    b.textContent = "You're in. Dex has your order. Change it any time before Thursday.";
+    b.textContent = "Sent. Dex has your order.";
     box.appendChild(b);
   }
+}
+
+/* ---------------- step machine ---------------- */
+
+function showStep(n) {
+  state.step = Math.max(0, Math.min(STEPS - 1, n));
+
+  document.querySelectorAll('.step').forEach((s) => {
+    s.classList.toggle('active', Number(s.dataset.step) === state.step);
+  });
+
+  el('backBtn').hidden = state.step === 0;
+
+  const next = el('nextBtn');
+  if (state.step === 0) next.textContent = "Let's go";
+  else if (state.step === STEPS - 1) next.textContent = state.submitted ? 'Update my order' : 'Send to Dex';
+  else next.textContent = 'Next';
+  next.disabled = state.rules.locked && state.step === STEPS - 1;
+
+  renderProgress();
+  renderBudgetBar();
+  if (state.step === 4) renderReview();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function renderLists() {
+  fillList(el('potList'), POT_SECTIONS, 'food');
+  fillList(el('foodList'), OWN_SECTIONS, 'food');
+  fillList(el('cocktailList'), null, 'cocktail');
+  renderPotBar();
+  renderBudgetBar();
 }
 
 /* ---------------- actions ---------------- */
 
 function change(item, delta) {
-  const counts = item.kind === 'food' ? state.food : state.cocktails;
-  const next = (counts[item.id] || 0) + delta;
+  const bucket = bucketFor(item);
+  const next = (bucket[item.id] || 0) + delta;
 
-  if (next <= 0) delete counts[item.id];
-  else counts[item.id] = Math.min(next, 10);
+  if (next <= 0) delete bucket[item.id];
+  else bucket[item.id] = Math.min(next, 10);
 
-  // The server is authoritative on the caps; this is just fast feedback.
-  if (item.kind === 'food' && foodTotal() > Number(state.rules.food_cap)) {
-    if (delta > 0) counts[item.id] = (counts[item.id] || 1) - 1;
-    if (!counts[item.id]) delete counts[item.id];
-    toast(`That would go over your ${money(state.rules.food_cap)}.`, 'err');
-    return;
+  // Fast local feedback. The server is still the authority on all three caps.
+  if (delta > 0) {
+    const breach =
+      (bucket === state.food && foodTotal() > Number(state.rules.food_cap)) ||
+      (bucket === state.pot && state.potUsedByOthers + potMine() > Number(state.rules.pot_cap));
+
+    if (breach) {
+      bucket[item.id] -= 1;
+      if (!bucket[item.id]) delete bucket[item.id];
+      toast(bucket === state.pot ? 'The table pot is full.' : `That goes over your ${money(state.rules.food_cap)}.`, 'err');
+      return;
+    }
   }
 
-  cacheDraft();
-  render();
+  renderLists();
   queueSave();
 }
 
@@ -192,22 +297,45 @@ function queueSave() {
   saveTimer = setTimeout(() => save(false), 700);
 }
 
+function applyServer(res) {
+  state.submitted = Boolean(res.order.submitted_at);
+  // Someone else may have taken from the pot since we last looked.
+  state.potUsedByOthers = Number(res.pot.used) - Number(res.order.pot_total);
+}
+
 async function save(submit) {
   try {
     const res = await rpc('bday_save_order', {
       p_token: TOKEN,
       p_food: toLines(state.food),
+      p_pot: toLines(state.pot),
       p_cocktails: toLines(state.cocktails),
       p_submit: submit,
     });
-    state.submitted = Boolean(res.order.submitted_at);
-    renderStatus();
-    if (submit) toast('Order sent to Dex 🎉', 'ok');
+    applyServer(res);
+    renderPotBar();
+    if (submit) toast('Order sent 🎉', 'ok');
     return true;
   } catch (err) {
-    toast(friendlyError(err), 'err');
+    const msg = String(err?.message ?? '');
+    if (msg.includes('pot_full')) {
+      // Another guest got there first — resync and drop our last add.
+      await refreshPot();
+      toast('Someone just took the last of the pot. Adjusted.', 'err');
+    } else {
+      toast(friendlyError(err), 'err');
+    }
     return false;
   }
+}
+
+async function refreshPot() {
+  try {
+    const mine = await rpc('bday_get_guest', { p_token: TOKEN });
+    state.pot = toCounts(mine.order.pot_lines);
+    applyServer(mine);
+    renderLists();
+  } catch { /* leave the last known state on screen */ }
 }
 
 /* ---------------- boot ---------------- */
@@ -227,42 +355,56 @@ async function boot() {
     state.menu = meta.menu;
     state.rules = meta.rules;
     state.food = toCounts(mine.order.food_lines);
+    state.pot = toCounts(mine.order.pot_lines);
     state.cocktails = toCounts(mine.order.cocktail_lines);
-    state.submitted = Boolean(mine.order.submitted_at);
+    applyServer(mine);
 
-    el('eventName').textContent = state.rules.event_name;
-    el('venue').textContent = state.rules.venue;
-    el('eventDate').textContent = new Date(state.rules.event_date + 'T00:00:00').toLocaleDateString(
-      'en-GB',
-      { weekday: 'long', day: 'numeric', month: 'long' },
-    );
     el('guestName').textContent = mine.guest.name;
+    el('welcomeVenue').textContent = state.rules.venue;
+    el('welcomeDate').textContent = new Date(state.rules.event_date + 'T00:00:00').toLocaleDateString(
+      'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    el('wPot').textContent = money(state.rules.pot_cap);
+    el('wFood').textContent = money(state.rules.food_cap);
+    el('wCk').textContent = state.rules.cocktail_cap;
+    el('ckCap').textContent = state.rules.cocktail_cap;
     document.title = `${mine.guest.name} — pick your food`;
+
+    if (state.rules.locked) {
+      const b = document.createElement('div');
+      b.className = 'banner warn';
+      b.textContent = 'Orders are locked in. Talk to Dex if you need a change.';
+      el('statusBanner').appendChild(b);
+    }
 
     el('state').hidden = true;
     el('app').hidden = false;
-    el('budgetBar').hidden = false;
-    el('footbar').hidden = false;
+    el('progress').hidden = false;
+    el('navbar').hidden = false;
 
-    if (state.rules.locked) {
-      el('submitBtn').disabled = true;
-      el('submitBtn').textContent = 'Locked';
-    }
-
-    render();
+    renderLists();
+    showStep(0);
   } catch (err) {
     el('state').textContent = friendlyError(err);
   }
 }
 
-el('submitBtn').onclick = async () => {
-  const btn = el('submitBtn');
+el('backBtn').onclick = () => showStep(state.step - 1);
+
+el('nextBtn').onclick = async () => {
+  if (state.step < STEPS - 1) {
+    if (state.step === 0) await refreshPot(); // fresh pot figure on the way in
+    showStep(state.step + 1);
+    return;
+  }
+
+  const btn = el('nextBtn');
   btn.disabled = true;
   btn.textContent = 'Sending…';
   clearTimeout(saveTimer);
   const ok = await save(true);
-  btn.disabled = state.rules?.locked ?? false;
-  btn.textContent = ok ? 'Update order' : 'Submit order';
+  btn.disabled = false;
+  btn.textContent = ok ? 'Update my order' : 'Send to Dex';
+  renderReview();
 };
 
 boot();

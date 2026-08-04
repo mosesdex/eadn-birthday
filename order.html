@@ -9,6 +9,8 @@
 </head>
 <body>
 
+<div class="progress" id="progress" hidden></div>
+
 <div class="budget" id="budgetBar" hidden>
   <div class="budget-inner">
     <div class="budget-row">
@@ -19,39 +21,117 @@
   </div>
 </div>
 
-<header class="masthead">
-  <p class="venue" id="venue">EADN St. Paul's</p>
-  <h1 class="event" id="eventName">Birthday Dinner</h1>
-  <p class="date" id="eventDate"></p>
-</header>
-
 <main class="wrap">
   <div id="state" class="state">Loading your menu…</div>
-  <div id="app" hidden>
-    <p class="greet">Hey <strong id="guestName"></strong>, pick what you want to eat.</p>
-    <div id="statusBanner"></div>
-    <div id="foodSections"></div>
 
-    <section class="on-the-house">
-      <span class="house-badge">On Dex 🍹</span>
-      <p class="house-lede">Drinks are on me. Pick up to <b id="ckCap">2</b> cocktails.</p>
-      <p class="house-sub">Doesn't touch your food budget. Want more at the table? I've got it.</p>
+  <div id="app" hidden>
+
+    <!-- 1 ─ welcome -->
+    <section class="step" data-step="0">
+      <p class="step-kicker" id="welcomeVenue">EADN St. Paul's</p>
+      <h1 class="step-title">Hey <span id="guestName"></span> 👋</h1>
+      <p class="step-lede" id="welcomeDate"></p>
+
+      <div class="welcome-card">
+        <span class="icon">🍗</span>
+        <div>
+          <h3>The table pot</h3>
+          <p>A shared <b id="wPot">£120</b> kitty for starters and sides that land in the middle. Everyone picks from it. First come, first served.</p>
+        </div>
+      </div>
+
+      <div class="welcome-card">
+        <span class="icon">🍽️</span>
+        <div>
+          <h3>Your own plate</h3>
+          <p><b id="wFood">£35</b> just for you — pick a main, and a dessert if you want one.</p>
+        </div>
+      </div>
+
+      <div class="welcome-card">
+        <span class="icon">🍹</span>
+        <div>
+          <h3>Drinks are on me</h3>
+          <p>Pick <b id="wCk">2</b> cocktails now. Want more at the table? I've got it.</p>
+        </div>
+      </div>
+
+      <div id="statusBanner"></div>
+    </section>
+
+    <!-- 2 ─ shared pot -->
+    <section class="step" data-step="1">
+      <p class="step-kicker">Step 1 of 4</p>
+      <h2 class="step-title">For the table</h2>
+      <p class="step-lede">Starters and sides for the middle. Add what you want everyone to share.</p>
+
+      <div class="pot-bar">
+        <div class="row">
+          <span class="amount" id="potLeft">£120.00 left</span>
+          <span class="muted" id="potUsed"></span>
+        </div>
+        <div class="meter" id="potMeter"><span id="potFill"></span></div>
+      </div>
+
+      <div id="potList"></div>
+    </section>
+
+    <!-- 3 ─ personal -->
+    <section class="step" data-step="2">
+      <p class="step-kicker">Step 2 of 4</p>
+      <h2 class="step-title">Your plate</h2>
+      <p class="step-lede">This one's yours alone. Pick a main, add a dessert if there's room.</p>
+      <div id="foodList"></div>
+    </section>
+
+    <!-- 4 ─ drinks -->
+    <section class="step" data-step="3">
+      <p class="step-kicker">Step 3 of 4</p>
+      <h2 class="step-title">Drinks on me 🍹</h2>
+      <p class="step-lede">Pick up to <b id="ckCap">2</b>. Doesn't touch your food money.</p>
       <div id="cocktailList"></div>
     </section>
 
-    <p class="center muted small" style="margin:2rem 0">
-      Prices are EADN's own. Your picks save automatically, so change them any time before Thursday.
-    </p>
+    <!-- 5 ─ review -->
+    <section class="step" data-step="4">
+      <p class="step-kicker">Step 4 of 4</p>
+      <h2 class="step-title">Look right?</h2>
+      <p class="step-lede">Check it over, then send it to me.</p>
+
+      <div class="review-block">
+        <h3>For the table</h3>
+        <ul class="lines" id="revPot"></ul>
+      </div>
+
+      <div class="review-block">
+        <h3>Your plate</h3>
+        <ul class="lines" id="revFood"></ul>
+      </div>
+
+      <div class="review-block">
+        <h3>Your drinks</h3>
+        <ul class="lines" id="revCk"></ul>
+      </div>
+
+      <div class="grand">
+        <span class="muted">Your own food</span>
+        <b id="revTotal">£0.00</b>
+      </div>
+
+      <div id="doneBanner"></div>
+
+      <p class="center muted small" style="margin:1.5rem 0">
+        You can come back and change this any time before Thursday.
+      </p>
+    </section>
+
   </div>
 </main>
 
-<div class="footbar" id="footbar" hidden>
-  <div class="footbar-inner">
-    <div class="foot-total">
-      Your food
-      <b id="footTotal">£0.00</b>
-    </div>
-    <button class="btn" id="submitBtn">Submit order</button>
+<div class="footbar" id="navbar" hidden>
+  <div class="navbar-inner">
+    <button class="btn ghost" id="backBtn">Back</button>
+    <button class="btn" id="nextBtn">Let's go</button>
   </div>
 </div>
 
