@@ -6,10 +6,15 @@ const TOKEN = param('t');
    those items are charged to. Adding a step is a one-line change. */
 const STEPS = [
   { id: 'welcome', label: 'Start' },
-  { id: 'table', label: 'Table', bucket: 'pot', sections: ['Small Plates', 'Sides'], list: 'listPot' },
-  { id: 'main', label: 'Main', bucket: 'food', sections: ['Large Plates'], list: 'listMain' },
-  { id: 'dessert', label: 'Sweet', bucket: 'food', sections: ['Desserts'], list: 'listDessert' },
-  { id: 'drinks', label: 'Drinks', bucket: 'cocktails', kind: 'cocktail', list: 'listDrinks' },
+  {
+    id: 'share', label: 'Share', bucket: 'food', list: 'listShare', tally: 'shareTally',
+    sections: ['Appetisers', 'Raw', 'Small Dishes', 'Skewers', 'Sushi Rolls', 'Sides'],
+  },
+  {
+    id: 'main', label: 'Main', bucket: 'food', list: 'listMain', tally: 'mainTally',
+    sections: ['Speciality', 'Rice & Noodles'],
+  },
+  { id: 'drinks', label: 'Drinks', bucket: 'cocktails', kind: 'cocktail', list: 'listDrinks', tally: 'ckTally' },
   { id: 'review', label: 'Review' },
 ];
 
@@ -23,7 +28,6 @@ const state = {
   step: 0,
   furthest: 0,
   food: {},
-  pot: {},
   cocktails: {},
   submitted: false,
 };
@@ -40,14 +44,11 @@ const sumOf = (counts) => Object.entries(counts).reduce((t, [id, q]) => t + pric
 const countOf = (counts) => Object.values(counts).reduce((a, b) => a + b, 0);
 
 const foodLeft = () => Number(state.rules.food_cap) - sumOf(state.food);
-const potLeft = () => Number(state.rules.pot_per_guest) - sumOf(state.pot);
-const potItemsLeft = () => Number(state.rules.pot_item_cap) - countOf(state.pot);
 const cocktailsLeft = () => Number(state.rules.cocktail_cap) - countOf(state.cocktails);
 
-const hasFood = () => countOf(state.food) + countOf(state.pot) > 0;
+const hasFood = () => countOf(state.food) > 0;
 
-const bucketOf = (name) =>
-  name === 'pot' ? state.pot : name === 'food' ? state.food : state.cocktails;
+const bucketOf = (name) => (name === 'food' ? state.food : state.cocktails);
 
 function itemsFor(step) {
   if (step.kind === 'cocktail') return state.menu.filter((m) => m.kind === 'cocktail');
@@ -66,11 +67,7 @@ function blockReason(item, step) {
   if (step.kind === 'cocktail') {
     return cocktailsLeft() <= 0 ? `That's your ${state.rules.cocktail_cap}.` : null;
   }
-  if (step.bucket === 'pot') {
-    if (potItemsLeft() <= 0) return "That's plenty for the middle.";
-    return item.price > potLeft() ? 'Too much alongside your other pick.' : null;
-  }
-  return item.price > foodLeft() ? "Won't fit with your main." : null;
+  return item.price > foodLeft() ? "Won't fit with what you've chosen." : null;
 }
 
 /* ---------------- feedback ---------------- */
@@ -205,17 +202,18 @@ const renderAllLists = () => STEPS.filter((s) => s.list).forEach(renderList);
 
 /* Counts, never amounts. */
 function renderTallies() {
-  const potMax = Number(state.rules.pot_item_cap);
-  const potPicked = countOf(state.pot);
-  el('potTally').textContent = potPicked
-    ? `${potPicked} of ${potMax} chosen`
-    : `Choose up to ${potMax}`;
+  for (const step of STEPS) {
+    if (!step.tally) continue;
+    const node = el(step.tally);
+    const picked = pickedIn(step);
 
-  const ckMax = Number(state.rules.cocktail_cap);
-  const ckPicked = countOf(state.cocktails);
-  el('ckTally').textContent = ckPicked
-    ? `${ckPicked} of ${ckMax} chosen`
-    : `Choose up to ${ckMax}`;
+    if (step.kind === 'cocktail') {
+      const max = Number(state.rules.cocktail_cap);
+      node.textContent = picked ? `${picked} of ${max} chosen` : `Choose up to ${max}`;
+      continue;
+    }
+    node.textContent = picked ? `${picked} chosen` : 'Nothing chosen yet';
+  }
 }
 
 /* ---------------- review ---------------- */
@@ -250,10 +248,9 @@ function fillRecap(nodeId, step) {
 }
 
 function renderReview() {
-  fillRecap('recapPot', STEPS[1]);
+  fillRecap('recapShare', STEPS[1]);
   fillRecap('recapMain', STEPS[2]);
-  fillRecap('recapDessert', STEPS[3]);
-  fillRecap('recapDrinks', STEPS[4]);
+  fillRecap('recapDrinks', STEPS[3]);
 
   const box = el('sentNotice');
   box.textContent = '';
@@ -267,8 +264,8 @@ function renderReview() {
     const jump = document.createElement('button');
     jump.type = 'button';
     jump.className = 'btn sm ghost';
-    jump.textContent = 'Choose a main';
-    jump.onclick = () => goto(2);
+    jump.textContent = 'Back to the sharing plates';
+    jump.onclick = () => goto(1);
     box.appendChild(jump);
     return;
   }
@@ -302,9 +299,7 @@ function navCopy() {
     const picked = pickedIn(step);
     next.textContent = picked ? 'Next' : `Skip ${step.label.toLowerCase()}`;
 
-    if (step.bucket === 'pot') {
-      context.textContent = plural(Math.max(0, potItemsLeft()), 'pick left', 'picks left');
-    } else if (step.bucket === 'cocktails') {
+    if (step.bucket === 'cocktails') {
       context.textContent = plural(Math.max(0, cocktailsLeft()), 'drink left', 'drinks left');
     } else {
       context.textContent = picked ? plural(picked, 'chosen', 'chosen') : '';
@@ -343,7 +338,6 @@ function change(item, step, delta) {
   if (delta > 0) {
     const broke =
       (step.bucket === 'food' && foodLeft() < 0) ||
-      (step.bucket === 'pot' && (potLeft() < 0 || potItemsLeft() < 0)) ||
       (step.bucket === 'cocktails' && cocktailsLeft() < 0);
 
     if (broke) {
@@ -370,7 +364,7 @@ async function save(submit) {
     const res = await rpc('bday_save_order', {
       p_token: TOKEN,
       p_food: toLines(state.food),
-      p_pot: toLines(state.pot),
+      p_pot: [],
       p_cocktails: toLines(state.cocktails),
       p_submit: submit,
     });
@@ -406,7 +400,6 @@ async function boot() {
     state.menu = meta.menu;
     state.rules = meta.rules;
     state.food = toCounts(mine.order.food_lines);
-    state.pot = toCounts(mine.order.pot_lines);
     state.cocktails = toCounts(mine.order.cocktail_lines);
     state.submitted = Boolean(mine.order.submitted_at);
 
@@ -419,13 +412,10 @@ async function boot() {
     el('helloLead').textContent = mine.guest.celebrant ? 'Happy birthday,' : 'Hey';
     el('venueLine').textContent = r.venue;
     el('bkWhen').textContent = `${when}, ${r.event_time}`;
-    el('bkTable').textContent = 'Table of 6';
+    el('bkTable').textContent = r.booking_confirmed ? 'Table of 6' : 'Table of 6 — time to be confirmed';
     el('bkWhere').textContent = r.address;
 
-    el('briefPot').textContent = `Up to ${r.pot_item_cap}`;
     el('briefCk').textContent = `Up to ${r.cocktail_cap}`;
-    el('potLede').textContent =
-      `Everyone picks a couple of things for the centre of the table, so choose up to ${r.pot_item_cap} you'd want to share.`;
     el('drinkLede').textContent =
       `Pick up to ${r.cocktail_cap} to start the night. Plenty more at the table after that.`;
 

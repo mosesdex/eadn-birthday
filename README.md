@@ -1,17 +1,19 @@
-# EADN Birthday Pre-Order
+# Birthday Pre-Order — PIRAÑA London
 
-Food pre-ordering for a birthday dinner at [EADN St. Paul's](https://eadnstpauls.co.uk/),
-Thursday 6 August 2026. Six guests.
+Food pre-ordering for a birthday dinner at [PIRAÑA London](https://www.piranalondon.com/),
+Thursday 6 August 2026. Six guests, Nikkei, Mayfair.
 
 Guests never see a figure. They pick, and the app quietly refuses anything that
-would go over. All budgets live in `bday_config` and are visible only on the
-host dashboard: £45 each for a main and dessert, £25 each toward shared plates
-for the middle (£150 across the table), two cocktails each. £420 all in.
+would go over. Budgets live in `bday_config` and are visible only on the host
+side: £50 each across the whole menu (matching the venue's £50pp minimum spend,
+confirmed by phone), two cocktails each on the host.
 
-The guest page is a five-step flow built for a phone: welcome, table pot, main,
-dessert, drinks, review.
+Piraña's mains start at £32, so a single purse per guest is the only split that
+works here — there is no separate shared-plate allowance as there was at the
+previous venue. `pot_cap` is 0 and the pot columns are retained but unused.
 
-Static site on GitHub Pages, Supabase for storage. No build step.
+On top of every price the venue adds 10% service, a 5% entertainment charge and
+a £3pp cover.
 
 ## Pages
 

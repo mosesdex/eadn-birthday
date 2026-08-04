@@ -65,10 +65,25 @@ function renderStats() {
 
   el('statTotal').textContent = money(total);
   el('statTotal').classList.toggle('over', total > cap);
-  el('statBreakdown').textContent = `${money(personal)} personal · ${money(pot)} pot`;
+  el('statBreakdown').textContent = potCap > 0
+    ? `${money(personal)} personal · ${money(pot)} pot`
+    : `across ${data.guests.length} guests`;
 
-  el('statPot').textContent = `${money(pot)} / ${money(potCap)}`;
-  el('statPot').classList.toggle('over', pot > potCap);
+  // Piraña runs one purse per guest, so there is no pot to report.
+  const potStat = el('statPot').closest('.stat');
+  if (potCap > 0) {
+    el('statPot').textContent = `${money(pot)} / ${money(potCap)}`;
+    el('statPot').classList.toggle('over', pot > potCap);
+    potStat.hidden = false;
+  } else {
+    potStat.hidden = true;
+  }
+
+  // Minimum spend is a floor the table has to clear, not a ceiling.
+  const min = Number(data.rules.min_spend || 0) * data.guests.length;
+  const towards = total + barTotal;
+  el('statMin').textContent = min ? `${money(towards)} / ${money(min)}` : '—';
+  el('statMin').classList.toggle('under', min > 0 && towards < min);
 
   el('statCap').textContent = money(cap);
   el('statSubmitted').textContent = `${submitted} / ${data.guests.length}`;
@@ -113,7 +128,7 @@ function statusPill(g) {
   if (g.submitted_at) {
     pill.className = 'pill done';
     pill.textContent = 'Submitted';
-  } else if (Number(g.food_total) + Number(g.pot_total) > 0) {
+  } else if (Number(g.guest_total) > 0) {
     pill.className = 'pill draft';
     pill.textContent = 'In progress';
   } else {
@@ -157,11 +172,7 @@ function renderGuests() {
     own.className = 'pill';
     own.textContent = `${money(g.food_total)} own`;
 
-    const pot = document.createElement('span');
-    pot.className = 'pill';
-    pot.textContent = `${money(g.pot_total)} pot`;
-
-    head.append(nameInput, statusPill(g), own, pot);
+    head.append(nameInput, statusPill(g), own);
     card.appendChild(head);
 
     const all = [

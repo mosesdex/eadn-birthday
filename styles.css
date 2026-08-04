@@ -1,11 +1,11 @@
 /* ============================================================
    EADN Birthday — design tokens
 
-   Palette and type lifted from eadnstpauls.co.uk so the ordering page
-   reads as the restaurant's, not a generic dark theme:
-     #f3a86e apricot (their dominant accent)  #c9a96e gold
-     #351b21 plum    #b1b0ac warm grey        #1e1e1e near-black
-   Type is their pairing too: Space Grotesk with Space Mono for figures.
+   Palette taken from PIRAÑA's own printed menus, which are copper on
+   white with a teal wordmark:
+     #d9a380 copper (fills)   #8a5433 deep copper (text, indicators)
+     #2f7f80 teal (secondary) #2a1810 espresso ink
+   Type is Space Grotesk with Space Mono for figures.
 
    Product register: fixed rem scale, accent reserved for action and state.
    ============================================================ */
@@ -19,27 +19,27 @@
   --line-strong: #8d7c6e;
 
   /* ink — espresso 18.4:1 on white, walnut 9.2:1 */
-  --ink: #1c120d;
-  --ink-muted: #5c4231;
+  --ink: #1f1611;
+  --ink-muted: #5b4739;
 
   /* accent.
      Apricot is EADN's colour but it is a FILL, not a typeface colour:
      #f3a86e on white is about 2:1 and fails any text. So apricot fills
      buttons and bars (8.8:1 against its own espresso ink), and a deeper
      burnt orange carries accent TEXT at 6.0:1 on white. */
-  --accent: #f3a86e;
-  --accent-bright: #eb9450;
-  --accent-strong: #9a4f0f;
-  --accent-ink: #241812;
-  --accent-dim: rgb(243 168 110 / 0.16);
-  --accent-line: rgb(243 168 110 / 0.55);
-  --accent-mark: rgb(154 79 15 / 0.75);
+  --accent: #d9a380;
+  --accent-bright: #c98a63;
+  --accent-strong: #8a5433;
+  --accent-ink: #2a1810;
+  --accent-dim: rgb(217 163 128 / 0.18);
+  --accent-line: rgb(217 163 128 / 0.6);
+  --accent-mark: rgb(138 84 51 / 0.75);
 
-  /* secondary brand gold — the shared dishes */
-  --gold: #c9a96e;
-  --gold-strong: #7a5c1f;
-  --gold-dim: rgb(201 169 110 / 0.16);
-  --gold-line: rgb(201 169 110 / 0.55);
+  /* secondary — the teal from their wordmark */
+  --gold: #7fb8b8;
+  --gold-strong: #2f7f80;
+  --gold-dim: rgb(127 184 184 / 0.16);
+  --gold-line: rgb(127 184 184 / 0.55);
 
   /* semantic state — darkened for white, all >= 4.5:1 */
   --ok: #2f7d54;
@@ -813,7 +813,7 @@ body {
   height: 40rem;
   top: -14rem;
   left: -12rem;
-  background: radial-gradient(circle, rgb(243 168 110 / 0.30), transparent 68%);
+  background: radial-gradient(circle, rgb(217 163 128 / 0.34), transparent 68%);
   animation: drift-a 46s var(--ease) infinite alternate;
 }
 
@@ -822,7 +822,7 @@ body {
   height: 34rem;
   bottom: -12rem;
   right: -10rem;
-  background: radial-gradient(circle, rgb(201 169 110 / 0.26), transparent 68%);
+  background: radial-gradient(circle, rgb(127 184 184 / 0.26), transparent 68%);
   animation: drift-b 61s var(--ease) infinite alternate;
 }
 
@@ -831,7 +831,7 @@ body {
   height: 30rem;
   top: 38%;
   right: -14rem;
-  background: radial-gradient(circle, rgb(196 122 96 / 0.22), transparent 70%);
+  background: radial-gradient(circle, rgb(196 138 99 / 0.22), transparent 70%);
   animation: drift-c 73s var(--ease) infinite alternate;
 }
 
@@ -879,3 +879,6 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 
 /* The "nothing chosen" prompt on the review step and its shortcut. */
 #sentNotice .btn { margin-top: var(--s2); }
+
+/* A stat that is below a floor it must clear reads as attention, not error. */
+.stat .value.under { color: var(--warn); }

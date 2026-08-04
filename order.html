@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Pick your food — EADN St. Paul's</title>
+<title>Pick your food — PIRAÑA London</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
 <body>
 
 <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
-
 
 <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
   <defs>
@@ -74,24 +73,24 @@
           <div class="brief-row">
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ico-dome"/></svg>
             <div>
-              <h2>Something for the middle</h2>
-              <p>Starters and sides that land in the centre of the table for everyone to share.</p>
+              <h2>Plates for the middle</h2>
+              <p>Ceviche, tacos, sushi, tempura, skewers. Nikkei is built for sharing, so these land in the centre.</p>
             </div>
-            <span class="figure" id="briefPot"></span>
+            <span class="figure">Share</span>
           </div>
           <div class="brief-row">
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ico-plate"/></svg>
             <div>
-              <h2>Your own plate</h2>
-              <p>A main that's yours alone, and something sweet after it if you fancy one.</p>
+              <h2>Something of your own</h2>
+              <p>A main if you want one. Octopus, tuna steak, poussin, or a hot pot.</p>
             </div>
-            <span class="figure">Main &amp; dessert</span>
+            <span class="figure">Yours</span>
           </div>
           <div class="brief-row">
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ico-coupe"/></svg>
             <div>
               <h2>What you're drinking</h2>
-              <p>Choose your opening drinks so they're poured and waiting when we sit down.</p>
+              <p>Pick your opening cocktails so they're poured and waiting when we sit down.</p>
             </div>
             <span class="figure" id="briefCk"></span>
           </div>
@@ -101,38 +100,30 @@
       </div>
     </section>
 
-    <!-- table -->
+    <!-- to share -->
     <section class="step" data-step="1" aria-labelledby="t1">
       <div class="step-head">
         <h1 class="step-title" id="t1">For the middle</h1>
-        <p class="step-lede" id="potLede"></p>
-        <p class="tally" id="potTally"></p>
+        <p class="step-lede">Small plates that come out to share. Take whatever you'd want to reach for.</p>
+        <p class="tally" id="shareTally"></p>
       </div>
-      <div id="listPot"></div>
+      <div id="listShare"></div>
     </section>
 
     <!-- main -->
     <section class="step" data-step="2" aria-labelledby="t2">
       <div class="step-head">
         <h1 class="step-title" id="t2">Your main</h1>
-        <p class="step-lede">This one's yours alone. Take whatever you actually want.</p>
+        <p class="step-lede">Optional. Plenty of people just graze the sharing plates, so skip it if that's you.</p>
+        <p class="tally" id="mainTally"></p>
       </div>
       <div id="listMain"></div>
     </section>
 
-    <!-- dessert -->
+    <!-- drinks -->
     <section class="step" data-step="3" aria-labelledby="t3">
       <div class="step-head">
-        <h1 class="step-title" id="t3">Something sweet</h1>
-        <p class="step-lede">Optional. There's a birthday cake coming, so skip it if you'd rather save room.</p>
-      </div>
-      <div id="listDessert"></div>
-    </section>
-
-    <!-- drinks -->
-    <section class="step" data-step="4" aria-labelledby="t4">
-      <div class="step-head">
-        <h1 class="step-title" id="t4">Your drinks</h1>
+        <h1 class="step-title" id="t3">Your drinks</h1>
         <p class="step-lede" id="drinkLede"></p>
         <p class="tally" id="ckTally"></p>
       </div>
@@ -140,9 +131,9 @@
     </section>
 
     <!-- review -->
-    <section class="step" data-step="5" aria-labelledby="t5">
+    <section class="step" data-step="4" aria-labelledby="t4">
       <div class="step-head">
-        <h1 class="step-title" id="t5">Look right?</h1>
+        <h1 class="step-title" id="t4">Look right?</h1>
         <p class="step-lede">Change anything you want, then send it over.</p>
       </div>
 
@@ -151,7 +142,7 @@
           <h2>For the middle</h2>
           <button type="button" class="recap-edit" data-goto="1">Edit</button>
         </div>
-        <ul class="lines" id="recapPot"></ul>
+        <ul class="lines" id="recapShare"></ul>
       </div>
 
       <div class="recap">
@@ -164,16 +155,8 @@
 
       <div class="recap">
         <div class="recap-head">
-          <h2>Dessert</h2>
-          <button type="button" class="recap-edit" data-goto="3">Edit</button>
-        </div>
-        <ul class="lines" id="recapDessert"></ul>
-      </div>
-
-      <div class="recap">
-        <div class="recap-head">
           <h2>Your drinks</h2>
-          <button type="button" class="recap-edit" data-goto="4">Edit</button>
+          <button type="button" class="recap-edit" data-goto="3">Edit</button>
         </div>
         <ul class="lines" id="recapDrinks"></ul>
       </div>

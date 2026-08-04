@@ -37,10 +37,10 @@ function renderLedger() {
   const body = el('ledgerBody');
   body.textContent = '';
 
-  const lines = [
-    ['Own plates', `${guests} × ${money(r.food_cap)}`, personalBudget, personalSpent],
-    ['Shared dishes', `${guests} × ${money(r.pot_per_guest)}`, potBudget, potSpent],
-  ];
+  const lines = [['Food', `${guests} × ${money(r.food_cap)} each`, personalBudget, personalSpent]];
+  if (potBudget > 0) {
+    lines.push(['Shared dishes', `${guests} × ${money(r.pot_per_guest)}`, potBudget, potSpent]);
+  }
 
   for (const [label, sub, budget, spent] of lines) {
     const name = document.createElement('td');
@@ -83,6 +83,18 @@ function renderLedger() {
   grandLabel.textContent = 'With cocktails';
   const blank = cell('', 'num');
   foot.appendChild(row([grandLabel, blank, num(grand), cell('', 'num')]));
+
+  const min = Number(r.min_spend || 0) * guests;
+  if (min) {
+    const towards = foodTotal + barSpent;
+    const minRow = document.createElement('td');
+    minRow.textContent = 'Toward minimum spend';
+    foot.appendChild(row([
+      minRow, num(min), num(towards),
+      cell(towards >= min ? 'met' : money(min - towards) + ' short',
+           `num ${towards >= min ? 'under' : 'over'}`),
+    ]));
+  }
 
   const submitted = data.guests.filter((g) => g.submitted_at).length;
   el('moneyNote').textContent =
@@ -168,8 +180,8 @@ function renderGuests() {
     block.appendChild(head);
 
     const blocks = [
-      courseBlock('For the middle', g.pot_lines),
-      courseBlock('Own plate', g.food_lines),
+      courseBlock('Food', g.food_lines),
+      courseBlock('Shared', g.pot_lines),
       courseBlock('Drinks', g.cocktail_lines, false),
     ].filter(Boolean);
 
@@ -307,7 +319,7 @@ async function load() {
     })}`;
     el('backLink').href = `host.html?h=${encodeURIComponent(HOST)}`;
     el('docFoot').textContent =
-      `Prices are EADN's published menu prices. Service charge not included. ${r.host_name} settles the bill.`;
+      `Prices are ${r.venue}'s published menu prices. Excludes 10% service, 5% entertainment charge and £3pp cover. ${r.host_name} settles the bill.`;
 
     renderLedger();
     renderGuests();
