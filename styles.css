@@ -11,33 +11,40 @@
    ============================================================ */
 
 :root {
-  /* surfaces — near-black warmed toward the brand plum */
-  --bg: oklch(0.17 0.008 25);
-  --surface: oklch(0.22 0.012 25);
-  --surface-2: oklch(0.26 0.016 25);
-  --line: oklch(0.32 0.014 25);
-  --line-strong: oklch(0.44 0.016 25);
+  /* surfaces — white, with warm neutrals only where a panel must separate */
+  --bg: #ffffff;
+  --surface: #faf7f4;
+  --surface-2: #f2ece6;
+  --line: #e4dbd3;
+  --line-strong: #8d7c6e;
 
-  /* ink — #b1b0ac muted measures 8.8:1 on --bg */
-  --ink: oklch(0.97 0.004 60);
-  --ink-muted: oklch(0.74 0.006 80);
+  /* ink — espresso 18.4:1 on white, walnut 9.2:1 */
+  --ink: #1c120d;
+  --ink-muted: #5c4231;
 
-  /* accent — EADN apricot. 9.6:1 on --bg, 10.6:1 against its own ink. */
+  /* accent.
+     Apricot is EADN's colour but it is a FILL, not a typeface colour:
+     #f3a86e on white is about 2:1 and fails any text. So apricot fills
+     buttons and bars (8.8:1 against its own espresso ink), and a deeper
+     burnt orange carries accent TEXT at 6.0:1 on white. */
   --accent: #f3a86e;
-  --accent-bright: #f8c093;
-  --accent-ink: #24120c;
-  --accent-dim: rgb(243 168 110 / 0.13);
-  --accent-line: rgb(243 168 110 / 0.38);
+  --accent-bright: #eb9450;
+  --accent-strong: #9a4f0f;
+  --accent-ink: #241812;
+  --accent-dim: rgb(243 168 110 / 0.16);
+  --accent-line: rgb(243 168 110 / 0.55);
+  --accent-mark: rgb(154 79 15 / 0.75);
 
-  /* secondary brand gold — the pot, kept distinct from the primary accent */
+  /* secondary brand gold — the shared dishes */
   --gold: #c9a96e;
-  --gold-dim: rgb(201 169 110 / 0.12);
-  --gold-line: rgb(201 169 110 / 0.4);
+  --gold-strong: #7a5c1f;
+  --gold-dim: rgb(201 169 110 / 0.16);
+  --gold-line: rgb(201 169 110 / 0.55);
 
-  /* semantic state */
-  --ok: oklch(0.72 0.12 155);
-  --warn: oklch(0.78 0.13 75);
-  --danger: oklch(0.68 0.16 25);
+  /* semantic state — darkened for white, all >= 4.5:1 */
+  --ok: #2f7d54;
+  --warn: #8a5a00;
+  --danger: #b3261e;
 
   /* spacing scale */
   --s1: 0.25rem;
@@ -107,7 +114,7 @@ body {
 
 /* focus is never removed, only replaced */
 :focus-visible {
-  outline: 2px solid var(--accent-bright);
+  outline: 2px solid var(--accent-strong);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -169,10 +176,10 @@ body {
 }
 
 .rail button:hover:not(:disabled) { color: var(--ink); }
-.rail button.visited::after { background: var(--accent-line); }
+.rail button.visited::after { background: var(--accent-mark); }
 
-.rail button[aria-current='step'] { color: var(--accent-bright); }
-.rail button[aria-current='step']::after { background: var(--accent); }
+.rail button[aria-current='step'] { color: var(--accent-strong); }
+.rail button[aria-current='step']::after { background: var(--accent-strong); }
 
 .rail button:disabled { opacity: 0.45; cursor: not-allowed; }
 .rail button:focus-visible { outline-offset: -3px; }
@@ -214,7 +221,7 @@ body {
    ============================================================ */
 
 .hello { font-size: var(--t-xl); margin: 0 0 var(--s2); letter-spacing: -0.02em; }
-.hello span { color: var(--accent-bright); }
+.hello span { color: var(--accent-strong); }
 
 .venue-line {
   color: var(--ink-muted);
@@ -238,7 +245,7 @@ body {
   width: 26px;
   height: 26px;
   align-self: center;
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 .brief-row h2 { margin: 0 0 var(--s1); font-size: var(--t-base); font-weight: 600; }
 .brief-row p { margin: 0; color: var(--ink-muted); font-size: var(--t-sm); }
@@ -246,7 +253,7 @@ body {
 .brief-row .figure {
   font-size: var(--t-sm);
   font-weight: 600;
-  color: var(--accent-bright);
+  color: var(--accent-strong);
   white-space: nowrap;
 }
 
@@ -302,7 +309,7 @@ body {
   transition: transform var(--mid) var(--ease), background var(--mid) var(--ease);
 }
 
-.gauge.pot .meter span { background: var(--gold); }
+.gauge.pot .meter span { background: var(--gold-strong); }
 .meter.warn span { background: var(--warn); }
 .meter.full span { background: var(--danger); }
 
@@ -333,7 +340,7 @@ body {
 }
 
 .item:hover { border-color: var(--line-strong); }
-.item.picked { border-color: var(--accent); background: var(--surface-2); }
+.item.picked { border-color: var(--accent-strong); background: var(--surface-2); }
 .item.blocked { opacity: 0.4; }
 .item.blocked:hover { border-color: var(--line); }
 
@@ -357,7 +364,7 @@ body {
 .tag {
   font-size: var(--t-xs);
   font-weight: 600;
-  color: var(--accent-bright);
+  color: var(--accent-strong);
   border: 1px solid var(--accent-line);
   border-radius: var(--radius-pill);
   padding: 0 var(--s2);
@@ -427,7 +434,7 @@ body {
 .recap-edit {
   border: 0;
   background: none;
-  color: var(--accent-bright);
+  color: var(--accent-strong);
   font: inherit;
   font-size: var(--t-sm);
   cursor: pointer;
@@ -449,7 +456,7 @@ body {
 }
 
 .lines li + li { border-top: 1px solid var(--line); }
-.lines .qty-badge { color: var(--accent-bright); font-weight: 700; margin-right: var(--s2); font-variant-numeric: tabular-nums; }
+.lines .qty-badge { color: var(--accent-strong); font-weight: 700; margin-right: var(--s2); font-variant-numeric: tabular-nums; }
 .lines .amount { font-variant-numeric: tabular-nums; color: var(--ink-muted); }
 
 .recap-empty {
@@ -465,7 +472,7 @@ body {
   align-items: baseline;
   gap: var(--s4);
   padding: var(--s4) 0;
-  border-top: 2px solid var(--accent);
+  border-top: 2px solid var(--accent-strong);
   margin-top: var(--s2);
 }
 
@@ -503,7 +510,7 @@ body {
 }
 
 .btn {
-  border: 0;
+  border: 1px solid var(--accent-strong);
   border-radius: var(--radius-sm);
   min-height: var(--tap);
   padding: 0 var(--s5);
@@ -525,7 +532,7 @@ body {
 .btn.ghost {
   background: transparent;
   color: var(--ink);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   padding: 0 var(--s4);
 }
 
@@ -760,7 +767,7 @@ body {
   border: 1px solid var(--accent-line);
   border-radius: var(--radius-pill);
   background: var(--accent-dim);
-  color: var(--accent-bright);
+  color: var(--accent-strong);
   font-family: var(--font-mono);
   font-size: var(--t-xs);
 }
@@ -806,7 +813,7 @@ body {
   height: 40rem;
   top: -14rem;
   left: -12rem;
-  background: radial-gradient(circle, rgb(243 168 110 / 0.20), transparent 66%);
+  background: radial-gradient(circle, rgb(243 168 110 / 0.30), transparent 68%);
   animation: drift-a 46s var(--ease) infinite alternate;
 }
 
@@ -815,7 +822,7 @@ body {
   height: 34rem;
   bottom: -12rem;
   right: -10rem;
-  background: radial-gradient(circle, rgb(201 169 110 / 0.17), transparent 66%);
+  background: radial-gradient(circle, rgb(201 169 110 / 0.26), transparent 68%);
   animation: drift-b 61s var(--ease) infinite alternate;
 }
 
@@ -824,7 +831,7 @@ body {
   height: 30rem;
   top: 38%;
   right: -14rem;
-  background: radial-gradient(circle, rgb(120 40 48 / 0.30), transparent 68%);
+  background: radial-gradient(circle, rgb(196 122 96 / 0.22), transparent 70%);
   animation: drift-c 73s var(--ease) infinite alternate;
 }
 
@@ -833,7 +840,7 @@ body {
   content: '';
   position: absolute;
   inset: -50%;
-  opacity: 0.035;
+  opacity: 0.018;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 

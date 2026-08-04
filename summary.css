@@ -28,7 +28,7 @@
   gap: var(--s4);
   flex-wrap: wrap;
   padding: var(--s6) 0 var(--s4);
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent-strong);
 }
 
 .doc-head h1 {
@@ -114,7 +114,7 @@
 
 .ledger tfoot td {
   border-bottom: 0;
-  border-top: 2px solid var(--accent);
+  border-top: 2px solid var(--accent-strong);
   font-weight: 700;
   padding-top: var(--s3);
 }
@@ -169,7 +169,7 @@
 .course-label {
   font-size: var(--t-xs);
   font-weight: 600;
-  color: var(--accent-bright);
+  color: var(--accent-strong);
   margin: 0 0 var(--s1);
 }
 
@@ -190,7 +190,7 @@
 
 .course-list .qty-badge {
   font-family: var(--font-mono);
-  color: var(--accent-bright);
+  color: var(--accent-strong);
   font-weight: 700;
   margin-right: var(--s2);
 }
