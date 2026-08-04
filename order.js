@@ -1,18 +1,28 @@
 import { rpc, money, param, toLines, toCounts, friendlyError } from './api.js';
 
 const TOKEN = param('t');
-const STEPS = 5; // welcome, pot, personal, drinks, review
-const POT_SECTIONS = ['Small Plates', 'Sides'];
-const OWN_SECTIONS = ['Large Plates', 'Desserts'];
 
+/* Each picking step declares which menu sections it owns and which budget
+   bucket those items are charged to. Adding a step is a one-line change. */
+const STEPS = [
+  { id: 'welcome', label: 'Start' },
+  { id: 'table', label: 'Table', bucket: 'pot', sections: ['Small Plates', 'Sides'], list: 'listPot', optional: true },
+  { id: 'main', label: 'Main', bucket: 'food', sections: ['Large Plates'], list: 'listMain', optional: true },
+  { id: 'dessert', label: 'Sweet', bucket: 'food', sections: ['Desserts'], list: 'listDessert', optional: true },
+  { id: 'drinks', label: 'Drinks', bucket: 'cocktails', kind: 'cocktail', list: 'listDrinks', optional: true },
+  { id: 'review', label: 'Review' },
+];
+
+const LAST = STEPS.length - 1;
 const el = (id) => document.getElementById(id);
 
 const state = {
   menu: [],
   rules: null,
   step: 0,
-  food: {},      // personal — large plates + desserts
-  pot: {},       // shared table plates
+  furthest: 0,
+  food: {},
+  pot: {},
   cocktails: {},
   potUsedByOthers: 0,
   submitted: false,
@@ -24,118 +34,132 @@ let toastTimer = null;
 /* ---------------- totals ---------------- */
 
 const priceOf = (id) => state.menu.find((m) => m.id === id)?.price ?? 0;
-const sum = (counts) => Object.entries(counts).reduce((t, [id, q]) => t + priceOf(id) * q, 0);
+const sumOf = (counts) => Object.entries(counts).reduce((t, [id, q]) => t + priceOf(id) * q, 0);
 
-const foodTotal = () => sum(state.food);
-const potMine = () => sum(state.pot);
+const foodTotal = () => sumOf(state.food);
+const potMine = () => sumOf(state.pot);
 const potRemaining = () =>
   Math.max(0, Number(state.rules.pot_cap) - state.potUsedByOthers - potMine());
+const foodRemaining = () => Math.max(0, Number(state.rules.food_cap) - foodTotal());
 const cocktailCount = () => Object.values(state.cocktails).reduce((a, b) => a + b, 0);
 
-/* ---------------- chrome ---------------- */
+const bucketOf = (name) => (name === 'pot' ? state.pot : name === 'food' ? state.food : state.cocktails);
+
+/* Items belonging to one step, in menu order. */
+function itemsFor(step) {
+  if (step.kind === 'cocktail') return state.menu.filter((m) => m.kind === 'cocktail');
+  if (!step.sections) return [];
+  return state.menu.filter((m) => m.kind === 'food' && step.sections.includes(m.section));
+}
+
+const pickedIn = (step) =>
+  itemsFor(step).reduce((n, m) => n + (bucketOf(step.bucket)[m.id] || 0), 0);
+
+/* ---------------- feedback ---------------- */
 
 function toast(msg, kind = '') {
   clearTimeout(toastTimer);
   document.querySelector('.toast')?.remove();
   const node = document.createElement('div');
   node.className = `toast ${kind}`;
+  node.setAttribute('role', 'status');
   node.textContent = msg;
   document.body.appendChild(node);
   toastTimer = setTimeout(() => node.remove(), 3200);
 }
 
-function renderProgress() {
-  const bar = el('progress');
-  bar.textContent = '';
-  for (let i = 0; i < STEPS; i++) {
-    const dot = document.createElement('i');
-    if (i < state.step) dot.className = 'done';
-    if (i === state.step) dot.className = 'now';
-    bar.appendChild(dot);
+/* ---------------- rail ---------------- */
+
+function renderRail() {
+  const wrap = el('railInner');
+  wrap.textContent = '';
+
+  STEPS.forEach((step, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = step.label;
+
+    if (i === state.step) btn.setAttribute('aria-current', 'step');
+    if (i < state.furthest) btn.classList.add('visited');
+
+    // Don't let people skip ahead past where they've been.
+    btn.disabled = i > state.furthest;
+    btn.onclick = () => goto(i);
+    wrap.appendChild(btn);
+  });
+}
+
+/* ---------------- gauges ---------------- */
+
+function paintMeter(meterId, fillId, ratio) {
+  el(fillId).style.transform = `scaleX(${ratio})`;
+  const meter = el(meterId);
+  meter.classList.toggle('warn', ratio >= 0.8 && ratio < 1);
+  meter.classList.toggle('full', ratio >= 1);
+}
+
+function renderGauges() {
+  const potCap = Number(state.rules.pot_cap);
+  const potUsed = state.potUsedByOthers + potMine();
+  el('potLeft').textContent = `${money(potRemaining())} left in the pot`;
+  el('potMine').textContent = `you've added ${money(potMine())}`;
+  paintMeter('potMeter', 'potFill', potCap > 0 ? Math.min(1, potUsed / potCap) : 0);
+
+  const foodCap = Number(state.rules.food_cap);
+  const ratio = foodCap > 0 ? Math.min(1, foodTotal() / foodCap) : 0;
+
+  for (const [leftId, usedId, meterId, fillId] of [
+    ['foodLeft', 'foodUsed', 'foodMeter', 'foodFill'],
+    ['foodLeft2', 'foodUsed2', 'foodMeter2', 'foodFill2'],
+  ]) {
+    el(leftId).textContent = `${money(foodRemaining())} left`;
+    el(usedId).textContent = `${money(foodTotal())} of ${money(foodCap)}`;
+    paintMeter(meterId, fillId, ratio);
   }
-}
-
-// The sticky meter only means something on the personal-budget step.
-function renderBudgetBar() {
-  const show = state.step === 2;
-  el('budgetBar').hidden = !show;
-  if (!show) return;
-
-  const cap = Number(state.rules.food_cap);
-  const total = foodTotal();
-  const ratio = cap > 0 ? Math.min(1, total / cap) : 0;
-
-  el('budgetLeft').textContent = `${money(Math.max(0, cap - total))} left`;
-  el('budgetCap').textContent = `${money(total)} of ${money(cap)}`;
-  el('meterFill').style.transform = `scaleX(${ratio})`;
-
-  const meter = el('meter');
-  meter.classList.toggle('warn', ratio >= 0.78 && ratio < 1);
-  meter.classList.toggle('full', ratio >= 1);
-}
-
-function renderPotBar() {
-  const cap = Number(state.rules.pot_cap);
-  const used = state.potUsedByOthers + potMine();
-  const ratio = cap > 0 ? Math.min(1, used / cap) : 0;
-
-  el('potLeft').textContent = `${money(potRemaining())} left`;
-  el('potUsed').textContent = `${money(potMine())} added by you`;
-  el('potFill').style.transform = `scaleX(${ratio})`;
-
-  const meter = el('potMeter');
-  meter.classList.toggle('warn', ratio >= 0.78 && ratio < 1);
-  meter.classList.toggle('full', ratio >= 1);
 }
 
 /* ---------------- items ---------------- */
 
-function bucketFor(item) {
-  if (item.kind === 'cocktail') return state.cocktails;
-  return item.pot_eligible ? state.pot : state.food;
+function isBlocked(item, step) {
+  if (step.kind === 'cocktail') return cocktailCount() >= Number(state.rules.cocktail_cap);
+  return item.pot_eligible ? item.price > potRemaining() : item.price > foodRemaining();
 }
 
-function isBlocked(item) {
-  if (item.kind === 'cocktail') return cocktailCount() >= Number(state.rules.cocktail_cap);
-  if (item.pot_eligible) return item.price > potRemaining();
-  return item.price > Number(state.rules.food_cap) - foodTotal();
-}
-
-function itemRow(m) {
-  const qty = bucketFor(m)[m.id] || 0;
-  const blocked = isBlocked(m);
+function itemRow(m, step) {
+  const counts = bucketOf(step.bucket);
+  const qty = counts[m.id] || 0;
+  const blocked = isBlocked(m, step);
 
   const row = document.createElement('div');
   row.className = `item${qty > 0 ? ' picked' : ''}${blocked && qty === 0 ? ' blocked' : ''}`;
 
   const main = document.createElement('div');
-  main.className = 'item-main';
 
   const name = document.createElement('div');
   name.className = 'item-name';
-  name.textContent = m.name;
+  name.append(document.createTextNode(m.name));
+  if (m.note) {
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = m.note;
+    name.appendChild(tag);
+  }
   main.appendChild(name);
 
   if (m.description) {
-    const d = document.createElement('div');
-    d.className = 'item-desc';
-    d.textContent = m.description;
-    main.appendChild(d);
-  }
-  if (m.note) {
-    const n = document.createElement('span');
-    n.className = 'item-note';
-    n.textContent = m.note;
-    main.appendChild(n);
+    const desc = document.createElement('p');
+    desc.className = 'item-desc';
+    desc.textContent = m.description;
+    main.appendChild(desc);
   }
 
-  const right = document.createElement('div');
-  right.className = 'item-right';
+  const controls = document.createElement('div');
+  controls.className = 'item-controls';
 
-  const price = document.createElement('div');
+  const price = document.createElement('span');
   price.className = 'item-price';
   price.textContent = money(m.price);
-  right.appendChild(price);
+  controls.appendChild(price);
 
   const stepper = document.createElement('div');
   stepper.className = 'stepper';
@@ -145,63 +169,72 @@ function itemRow(m) {
   minus.textContent = '−';
   minus.disabled = qty === 0;
   minus.setAttribute('aria-label', `Remove one ${m.name}`);
-  minus.onclick = () => change(m, -1);
+  minus.onclick = () => change(m, step, -1);
 
   const count = document.createElement('span');
   count.className = 'qty';
   count.textContent = String(qty);
+  count.setAttribute('aria-live', 'polite');
+  count.setAttribute('aria-label', `${qty} ${m.name}`);
 
   const plus = document.createElement('button');
   plus.type = 'button';
   plus.textContent = '+';
   plus.disabled = blocked;
   plus.setAttribute('aria-label', `Add one ${m.name}`);
-  plus.onclick = () => change(m, 1);
+  plus.onclick = () => change(m, step, 1);
 
   stepper.append(minus, count, plus);
-  right.appendChild(stepper);
-  row.append(main, right);
+  controls.appendChild(stepper);
+  row.append(main, controls);
   return row;
 }
 
-function fillList(node, sections, kind) {
+function renderList(step) {
+  const node = el(step.list);
   node.textContent = '';
-  const groups = kind === 'cocktail' ? [null] : sections;
 
-  for (const section of groups) {
-    const items = state.menu.filter((m) =>
-      kind === 'cocktail' ? m.kind === 'cocktail' : m.kind === 'food' && m.section === section);
-    if (!items.length) continue;
+  const items = itemsFor(step);
+  const grouped = step.sections && step.sections.length > 1;
+
+  for (const section of grouped ? step.sections : [null]) {
+    const slice = section ? items.filter((m) => m.section === section) : items;
+    if (!slice.length) continue;
 
     if (section) {
-      const h = document.createElement('h3');
-      h.className = 'section-title';
-      h.textContent = section;
-      node.appendChild(h);
+      const label = document.createElement('h2');
+      label.className = 'group-label';
+      label.textContent = section;
+      node.appendChild(label);
     }
-    items.forEach((m) => node.appendChild(itemRow(m)));
+    slice.forEach((m) => node.appendChild(itemRow(m, step)));
   }
 }
 
+const renderAllLists = () => STEPS.filter((s) => s.list).forEach(renderList);
+
 /* ---------------- review ---------------- */
 
-function fillReview(node, counts, showMoney = true) {
+function fillRecap(nodeId, step, withPrices = true) {
+  const node = el(nodeId);
   node.textContent = '';
-  const entries = Object.entries(counts).filter(([, q]) => q > 0);
 
-  if (!entries.length) {
-    const li = document.createElement('li');
-    li.className = 'review-empty';
-    li.textContent = 'Nothing picked.';
-    node.appendChild(li);
+  const counts = bucketOf(step.bucket);
+  const rows = itemsFor(step)
+    .map((m) => [m, counts[m.id] || 0])
+    .filter(([, q]) => q > 0);
+
+  if (!rows.length) {
+    const p = document.createElement('p');
+    p.className = 'recap-empty';
+    p.textContent = 'Nothing picked yet.';
+    node.appendChild(p);
     return;
   }
 
-  for (const [id, qty] of entries) {
-    const m = state.menu.find((x) => x.id === id);
-    if (!m) continue;
-
+  for (const [m, qty] of rows) {
     const li = document.createElement('li');
+
     const left = document.createElement('span');
     const badge = document.createElement('span');
     badge.className = 'qty-badge';
@@ -209,86 +242,102 @@ function fillReview(node, counts, showMoney = true) {
     left.append(badge, document.createTextNode(m.name));
     li.appendChild(left);
 
-    if (showMoney) {
-      const right = document.createElement('span');
-      right.textContent = money(m.price * qty);
-      li.appendChild(right);
+    if (withPrices) {
+      const amount = document.createElement('span');
+      amount.className = 'amount';
+      amount.textContent = money(m.price * qty);
+      li.appendChild(amount);
     }
     node.appendChild(li);
   }
 }
 
 function renderReview() {
-  fillReview(el('revPot'), state.pot);
-  fillReview(el('revFood'), state.food);
-  fillReview(el('revCk'), state.cocktails, false);
-  el('revTotal').textContent = money(foodTotal());
+  fillRecap('recapPot', STEPS[1]);
+  fillRecap('recapMain', STEPS[2]);
+  fillRecap('recapDessert', STEPS[3]);
+  fillRecap('recapDrinks', STEPS[4], false);
+  el('recapTotal').textContent = money(foodTotal());
 
-  const box = el('doneBanner');
+  const box = el('sentNotice');
   box.textContent = '';
   if (state.submitted) {
-    const b = document.createElement('div');
-    b.className = 'banner';
-    b.textContent = "Sent. Dex has your order.";
-    box.appendChild(b);
+    const n = document.createElement('p');
+    n.className = 'notice';
+    n.textContent = 'Sent. Dex has your order.';
+    box.appendChild(n);
   }
 }
 
-/* ---------------- step machine ---------------- */
+/* ---------------- navigation ---------------- */
 
-function showStep(n) {
-  state.step = Math.max(0, Math.min(STEPS - 1, n));
+function navCopy() {
+  const step = STEPS[state.step];
+  const next = el('nextBtn');
+  const context = el('navContext');
+
+  el('backBtn').hidden = state.step === 0;
+
+  if (state.step === 0) {
+    next.textContent = 'Start';
+    context.textContent = '';
+  } else if (state.step === LAST) {
+    next.textContent = state.submitted ? 'Update my order' : 'Send to Dex';
+    context.textContent = `${money(foodTotal())} of yours`;
+  } else {
+    const picked = pickedIn(step);
+    next.textContent = picked ? 'Next' : `Skip ${step.label.toLowerCase()}`;
+
+    if (step.bucket === 'pot') context.textContent = `${money(potRemaining())} left in pot`;
+    else if (step.bucket === 'food') context.textContent = `${money(foodRemaining())} left`;
+    else context.textContent = `${cocktailCount()} of ${state.rules.cocktail_cap} picked`;
+  }
+
+  next.disabled = state.step === LAST && state.rules.locked;
+}
+
+function goto(n) {
+  state.step = Math.max(0, Math.min(LAST, n));
+  state.furthest = Math.max(state.furthest, state.step);
 
   document.querySelectorAll('.step').forEach((s) => {
     s.classList.toggle('active', Number(s.dataset.step) === state.step);
   });
 
-  el('backBtn').hidden = state.step === 0;
+  if (state.step === LAST) renderReview();
+  renderRail();
+  navCopy();
 
-  const next = el('nextBtn');
-  if (state.step === 0) next.textContent = "Let's go";
-  else if (state.step === STEPS - 1) next.textContent = state.submitted ? 'Update my order' : 'Send to Dex';
-  else next.textContent = 'Next';
-  next.disabled = state.rules.locked && state.step === STEPS - 1;
-
-  renderProgress();
-  renderBudgetBar();
-  if (state.step === 4) renderReview();
-  window.scrollTo({ top: 0, behavior: 'instant' });
-}
-
-function renderLists() {
-  fillList(el('potList'), POT_SECTIONS, 'food');
-  fillList(el('foodList'), OWN_SECTIONS, 'food');
-  fillList(el('cocktailList'), null, 'cocktail');
-  renderPotBar();
-  renderBudgetBar();
+  const behaviour = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  window.scrollTo({ top: 0, behavior: behaviour });
 }
 
 /* ---------------- actions ---------------- */
 
-function change(item, delta) {
-  const bucket = bucketFor(item);
-  const next = (bucket[item.id] || 0) + delta;
+function change(item, step, delta) {
+  const counts = bucketOf(step.bucket);
+  const next = (counts[item.id] || 0) + delta;
 
-  if (next <= 0) delete bucket[item.id];
-  else bucket[item.id] = Math.min(next, 10);
+  if (next <= 0) delete counts[item.id];
+  else counts[item.id] = Math.min(next, 10);
 
-  // Fast local feedback. The server is still the authority on all three caps.
+  // Immediate local feedback; the server still owns every cap.
   if (delta > 0) {
-    const breach =
-      (bucket === state.food && foodTotal() > Number(state.rules.food_cap)) ||
-      (bucket === state.pot && state.potUsedByOthers + potMine() > Number(state.rules.pot_cap));
+    const overFood = step.bucket === 'food' && foodTotal() > Number(state.rules.food_cap);
+    const overPot =
+      step.bucket === 'pot' && state.potUsedByOthers + potMine() > Number(state.rules.pot_cap);
 
-    if (breach) {
-      bucket[item.id] -= 1;
-      if (!bucket[item.id]) delete bucket[item.id];
-      toast(bucket === state.pot ? 'The table pot is full.' : `That goes over your ${money(state.rules.food_cap)}.`, 'err');
+    if (overFood || overPot) {
+      counts[item.id] -= 1;
+      if (!counts[item.id]) delete counts[item.id];
+      toast(overPot ? 'The table pot is empty.' : `That goes over your ${money(state.rules.food_cap)}.`, 'err');
       return;
     }
   }
 
-  renderLists();
+  renderAllLists();
+  renderGauges();
+  navCopy();
   queueSave();
 }
 
@@ -297,9 +346,8 @@ function queueSave() {
   saveTimer = setTimeout(() => save(false), 700);
 }
 
-function applyServer(res) {
+function absorb(res) {
   state.submitted = Boolean(res.order.submitted_at);
-  // Someone else may have taken from the pot since we last looked.
   state.potUsedByOthers = Number(res.pot.used) - Number(res.order.pot_total);
 }
 
@@ -312,15 +360,13 @@ async function save(submit) {
       p_cocktails: toLines(state.cocktails),
       p_submit: submit,
     });
-    applyServer(res);
-    renderPotBar();
+    absorb(res);
+    renderGauges();
     if (submit) toast('Order sent 🎉', 'ok');
     return true;
   } catch (err) {
-    const msg = String(err?.message ?? '');
-    if (msg.includes('pot_full')) {
-      // Another guest got there first — resync and drop our last add.
-      await refreshPot();
+    if (String(err?.message ?? '').includes('pot_full')) {
+      await resync();
       toast('Someone just took the last of the pot. Adjusted.', 'err');
     } else {
       toast(friendlyError(err), 'err');
@@ -329,20 +375,28 @@ async function save(submit) {
   }
 }
 
-async function refreshPot() {
+async function resync() {
   try {
     const mine = await rpc('bday_get_guest', { p_token: TOKEN });
     state.pot = toCounts(mine.order.pot_lines);
-    applyServer(mine);
-    renderLists();
-  } catch { /* leave the last known state on screen */ }
+    absorb(mine);
+    renderAllLists();
+    renderGauges();
+    navCopy();
+  } catch { /* keep the last known good state on screen */ }
 }
 
 /* ---------------- boot ---------------- */
 
+function fail(msg) {
+  el('loading').hidden = true;
+  el('failed').hidden = false;
+  el('failedMsg').textContent = msg;
+}
+
 async function boot() {
   if (!TOKEN) {
-    el('state').textContent = 'You need your own invite link. Ask Dex to send it.';
+    fail('You need your own invite link. Ask Dex to send yours over.');
     return;
   }
 
@@ -357,54 +411,68 @@ async function boot() {
     state.food = toCounts(mine.order.food_lines);
     state.pot = toCounts(mine.order.pot_lines);
     state.cocktails = toCounts(mine.order.cocktail_lines);
-    applyServer(mine);
+    absorb(mine);
+
+    const when = new Date(state.rules.event_date + 'T00:00:00').toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
 
     el('guestName').textContent = mine.guest.name;
-    el('welcomeVenue').textContent = state.rules.venue;
-    el('welcomeDate').textContent = new Date(state.rules.event_date + 'T00:00:00').toLocaleDateString(
-      'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-    el('wPot').textContent = money(state.rules.pot_cap);
-    el('wFood').textContent = money(state.rules.food_cap);
-    el('wCk').textContent = state.rules.cocktail_cap;
-    el('ckCap').textContent = state.rules.cocktail_cap;
+    el('venueLine').textContent = `${state.rules.venue} · ${when}`;
+    el('briefPot').textContent = `${money(state.rules.pot_cap)} shared`;
+    el('briefFood').textContent = `${money(state.rules.food_cap)} each`;
+    el('briefCk').textContent = `${state.rules.cocktail_cap} each`;
+    el('drinkLede').textContent =
+      `Pick up to ${state.rules.cocktail_cap}. These don't touch your food money.`;
     document.title = `${mine.guest.name} — pick your food`;
 
     if (state.rules.locked) {
-      const b = document.createElement('div');
-      b.className = 'banner warn';
-      b.textContent = 'Orders are locked in. Talk to Dex if you need a change.';
-      el('statusBanner').appendChild(b);
+      const n = document.createElement('p');
+      n.className = 'notice warn';
+      n.textContent = 'Orders are locked in. Talk to Dex if you need a change.';
+      el('lockNotice').appendChild(n);
     }
 
-    el('state').hidden = true;
-    el('app').hidden = false;
-    el('progress').hidden = false;
-    el('navbar').hidden = false;
+    // Someone mid-way through comes back to where they were useful, not to step 1.
+    if (mine.order.submitted_at) state.furthest = LAST;
 
-    renderLists();
-    showStep(0);
+    el('loading').hidden = true;
+    el('app').hidden = false;
+    el('rail').hidden = false;
+    el('nav').hidden = false;
+
+    renderAllLists();
+    renderGauges();
+    goto(0);
   } catch (err) {
-    el('state').textContent = friendlyError(err);
+    fail(friendlyError(err));
   }
 }
 
-el('backBtn').onclick = () => showStep(state.step - 1);
+el('backBtn').onclick = () => goto(state.step - 1);
 
 el('nextBtn').onclick = async () => {
-  if (state.step < STEPS - 1) {
-    if (state.step === 0) await refreshPot(); // fresh pot figure on the way in
-    showStep(state.step + 1);
+  if (state.step < LAST) {
+    if (state.step === 0) await resync(); // fresh pot figure before they spend from it
+    goto(state.step + 1);
     return;
   }
 
   const btn = el('nextBtn');
-  btn.disabled = true;
+  btn.dataset.busy = 'true';
   btn.textContent = 'Sending…';
   clearTimeout(saveTimer);
+
   const ok = await save(true);
-  btn.disabled = false;
-  btn.textContent = ok ? 'Update my order' : 'Send to Dex';
+
+  delete btn.dataset.busy;
   renderReview();
+  navCopy();
+  if (!ok) btn.textContent = 'Try again';
 };
+
+document.querySelectorAll('.recap-edit').forEach((btn) => {
+  btn.onclick = () => goto(Number(btn.dataset.goto));
+});
 
 boot();

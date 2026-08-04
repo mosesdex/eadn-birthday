@@ -9,129 +9,174 @@
 </head>
 <body>
 
-<div class="progress" id="progress" hidden></div>
-
-<div class="budget" id="budgetBar" hidden>
-  <div class="budget-inner">
-    <div class="budget-row">
-      <span class="budget-left" id="budgetLeft">—</span>
-      <span class="cap" id="budgetCap"></span>
-    </div>
-    <div class="meter" id="meter"><span id="meterFill"></span></div>
-  </div>
-</div>
+<nav class="rail" id="rail" aria-label="Order steps" hidden>
+  <div class="rail-inner" id="railInner"></div>
+</nav>
 
 <main class="wrap">
-  <div id="state" class="state">Loading your menu…</div>
+
+  <div id="loading" class="state" aria-live="polite">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <p class="state-msg">Getting the menu…</p>
+  </div>
+
+  <div id="failed" class="state" hidden>
+    <p class="state-msg" id="failedMsg"></p>
+  </div>
 
   <div id="app" hidden>
 
-    <!-- 1 ─ welcome -->
-    <section class="step" data-step="0">
-      <p class="step-kicker" id="welcomeVenue">EADN St. Paul's</p>
-      <h1 class="step-title">Hey <span id="guestName"></span> 👋</h1>
-      <p class="step-lede" id="welcomeDate"></p>
+    <!-- welcome -->
+    <section class="step" data-step="0" aria-labelledby="hello">
+      <div class="step-head">
+        <h1 class="hello" id="hello">Hey <span id="guestName"></span></h1>
+        <p class="venue-line" id="venueLine"></p>
 
-      <div class="welcome-card">
-        <span class="icon">🍗</span>
-        <div>
-          <h3>The table pot</h3>
-          <p>A shared <b id="wPot">£120</b> kitty for starters and sides that land in the middle. Everyone picks from it. First come, first served.</p>
+        <div class="brief">
+          <div class="brief-row">
+            <span class="glyph" aria-hidden="true">🍗</span>
+            <div>
+              <h2>The table pot</h2>
+              <p>Starters and sides for the middle. Shared by everyone, first come first served.</p>
+            </div>
+            <span class="figure" id="briefPot"></span>
+          </div>
+          <div class="brief-row">
+            <span class="glyph" aria-hidden="true">🍽️</span>
+            <div>
+              <h2>Your main and dessert</h2>
+              <p>Yours alone. Pick a main, add something sweet if there's room.</p>
+            </div>
+            <span class="figure" id="briefFood"></span>
+          </div>
+          <div class="brief-row">
+            <span class="glyph" aria-hidden="true">🍹</span>
+            <div>
+              <h2>Drinks are on me</h2>
+              <p>Pick your first two now. Want more at the table? I've got it.</p>
+            </div>
+            <span class="figure" id="briefCk"></span>
+          </div>
         </div>
-      </div>
 
-      <div class="welcome-card">
-        <span class="icon">🍽️</span>
-        <div>
-          <h3>Your own plate</h3>
-          <p><b id="wFood">£35</b> just for you — pick a main, and a dessert if you want one.</p>
-        </div>
+        <div id="lockNotice"></div>
       </div>
-
-      <div class="welcome-card">
-        <span class="icon">🍹</span>
-        <div>
-          <h3>Drinks are on me</h3>
-          <p>Pick <b id="wCk">2</b> cocktails now. Want more at the table? I've got it.</p>
-        </div>
-      </div>
-
-      <div id="statusBanner"></div>
     </section>
 
-    <!-- 2 ─ shared pot -->
-    <section class="step" data-step="1">
-      <p class="step-kicker">Step 1 of 4</p>
-      <h2 class="step-title">For the table</h2>
-      <p class="step-lede">Starters and sides for the middle. Add what you want everyone to share.</p>
-
-      <div class="pot-bar">
-        <div class="row">
-          <span class="amount" id="potLeft">£120.00 left</span>
-          <span class="muted" id="potUsed"></span>
+    <!-- table pot -->
+    <section class="step" data-step="1" aria-labelledby="t1">
+      <div class="step-head">
+        <h1 class="step-title" id="t1">For the table</h1>
+        <p class="step-lede">Starters and sides that land in the middle for everyone. Comes out of the shared pot, not your own money.</p>
+      </div>
+      <div class="gauge pot">
+        <div class="gauge-row">
+          <span class="gauge-left" id="potLeft"></span>
+          <span class="gauge-right" id="potMine"></span>
         </div>
         <div class="meter" id="potMeter"><span id="potFill"></span></div>
       </div>
-
-      <div id="potList"></div>
+      <div id="listPot"></div>
     </section>
 
-    <!-- 3 ─ personal -->
-    <section class="step" data-step="2">
-      <p class="step-kicker">Step 2 of 4</p>
-      <h2 class="step-title">Your plate</h2>
-      <p class="step-lede">This one's yours alone. Pick a main, add a dessert if there's room.</p>
-      <div id="foodList"></div>
+    <!-- main -->
+    <section class="step" data-step="2" aria-labelledby="t2">
+      <div class="step-head">
+        <h1 class="step-title" id="t2">Your main</h1>
+        <p class="step-lede">This one's yours alone. One plate, one person.</p>
+      </div>
+      <div class="gauge">
+        <div class="gauge-row">
+          <span class="gauge-left" id="foodLeft"></span>
+          <span class="gauge-right" id="foodUsed"></span>
+        </div>
+        <div class="meter" id="foodMeter"><span id="foodFill"></span></div>
+      </div>
+      <div id="listMain"></div>
     </section>
 
-    <!-- 4 ─ drinks -->
-    <section class="step" data-step="3">
-      <p class="step-kicker">Step 3 of 4</p>
-      <h2 class="step-title">Drinks on me 🍹</h2>
-      <p class="step-lede">Pick up to <b id="ckCap">2</b>. Doesn't touch your food money.</p>
-      <div id="cocktailList"></div>
+    <!-- dessert -->
+    <section class="step" data-step="3" aria-labelledby="t3">
+      <div class="step-head">
+        <h1 class="step-title" id="t3">Something sweet</h1>
+        <p class="step-lede">Optional. There's a birthday cake coming, so skip it if you'd rather save room.</p>
+      </div>
+      <div class="gauge">
+        <div class="gauge-row">
+          <span class="gauge-left" id="foodLeft2"></span>
+          <span class="gauge-right" id="foodUsed2"></span>
+        </div>
+        <div class="meter" id="foodMeter2"><span id="foodFill2"></span></div>
+      </div>
+      <div id="listDessert"></div>
     </section>
 
-    <!-- 5 ─ review -->
-    <section class="step" data-step="4">
-      <p class="step-kicker">Step 4 of 4</p>
-      <h2 class="step-title">Look right?</h2>
-      <p class="step-lede">Check it over, then send it to me.</p>
+    <!-- drinks -->
+    <section class="step" data-step="4" aria-labelledby="t4">
+      <div class="step-head">
+        <h1 class="step-title" id="t4">Drinks on me</h1>
+        <p class="step-lede" id="drinkLede"></p>
+      </div>
+      <div id="listDrinks"></div>
+    </section>
 
-      <div class="review-block">
-        <h3>For the table</h3>
-        <ul class="lines" id="revPot"></ul>
+    <!-- review -->
+    <section class="step" data-step="5" aria-labelledby="t5">
+      <div class="step-head">
+        <h1 class="step-title" id="t5">Look right?</h1>
+        <p class="step-lede">Change anything you want, then send it over.</p>
       </div>
 
-      <div class="review-block">
-        <h3>Your plate</h3>
-        <ul class="lines" id="revFood"></ul>
+      <div class="recap">
+        <div class="recap-head">
+          <h2>For the table</h2>
+          <button type="button" class="recap-edit" data-goto="1">Edit</button>
+        </div>
+        <ul class="lines" id="recapPot"></ul>
       </div>
 
-      <div class="review-block">
-        <h3>Your drinks</h3>
-        <ul class="lines" id="revCk"></ul>
+      <div class="recap">
+        <div class="recap-head">
+          <h2>Your main</h2>
+          <button type="button" class="recap-edit" data-goto="2">Edit</button>
+        </div>
+        <ul class="lines" id="recapMain"></ul>
       </div>
 
-      <div class="grand">
-        <span class="muted">Your own food</span>
-        <b id="revTotal">£0.00</b>
+      <div class="recap">
+        <div class="recap-head">
+          <h2>Dessert</h2>
+          <button type="button" class="recap-edit" data-goto="3">Edit</button>
+        </div>
+        <ul class="lines" id="recapDessert"></ul>
       </div>
 
-      <div id="doneBanner"></div>
+      <div class="recap">
+        <div class="recap-head">
+          <h2>Your drinks</h2>
+          <button type="button" class="recap-edit" data-goto="4">Edit</button>
+        </div>
+        <ul class="lines" id="recapDrinks"></ul>
+      </div>
 
-      <p class="center muted small" style="margin:1.5rem 0">
-        You can come back and change this any time before Thursday.
-      </p>
+      <div class="total">
+        <span>Your own food</span>
+        <b id="recapTotal">£0.00</b>
+      </div>
+
+      <div id="sentNotice"></div>
     </section>
 
   </div>
 </main>
 
-<div class="footbar" id="navbar" hidden>
-  <div class="navbar-inner">
-    <button class="btn ghost" id="backBtn">Back</button>
-    <button class="btn" id="nextBtn">Let's go</button>
+<div class="nav" id="nav" hidden>
+  <div class="nav-inner">
+    <button type="button" class="btn ghost" id="backBtn">Back</button>
+    <span class="nav-context" id="navContext"></span>
+    <button type="button" class="btn" id="nextBtn">Start</button>
   </div>
 </div>
 

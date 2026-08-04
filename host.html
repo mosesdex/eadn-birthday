@@ -9,16 +9,25 @@
 </head>
 <body>
 
-<header class="masthead">
-  <p class="venue">Host dashboard</p>
-  <h1 class="event" id="eventName">Birthday Dinner</h1>
-  <p class="date" id="eventDate"></p>
-</header>
-
 <main class="wrap">
-  <div id="state" class="state">Loading…</div>
+
+  <div id="loading" class="state" aria-live="polite">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <p class="state-msg">Loading the table…</p>
+  </div>
+
+  <div id="failed" class="state" hidden>
+    <p class="state-msg" id="failedMsg"></p>
+  </div>
 
   <div id="app" hidden>
+
+    <header class="masthead">
+      <h1 id="eventName">Birthday dinner</h1>
+      <p id="eventMeta"></p>
+    </header>
+
     <div class="stat-grid">
       <div class="stat">
         <div class="label">Food total</div>
@@ -27,15 +36,15 @@
       </div>
       <div class="stat">
         <div class="label">Shared pot</div>
-        <div class="value" id="statPot">£0 / £120</div>
+        <div class="value" id="statPot">—</div>
       </div>
       <div class="stat">
         <div class="label">Table cap</div>
-        <div class="value" id="statCap">£330</div>
+        <div class="value" id="statCap">—</div>
       </div>
       <div class="stat">
         <div class="label">Submitted</div>
-        <div class="value" id="statSubmitted">0 / 6</div>
+        <div class="value" id="statSubmitted">—</div>
       </div>
       <div class="stat">
         <div class="label">Cocktails on you</div>
@@ -43,29 +52,40 @@
       </div>
     </div>
 
-    <div id="lockBanner"></div>
+    <div id="lockNotice"></div>
 
-    <h2 class="section-title">Kitchen order</h2>
-    <p class="center muted small">Read this out at the table. It merges all six orders into one.</p>
-    <div class="kitchen">
+    <div class="section-head">
+      <h2>Kitchen order</h2>
+      <p>All six orders merged into one. This is what you read out at the table.</p>
+    </div>
+
+    <div class="panel accent">
       <ul class="lines" id="kitchenList"></ul>
-      <div class="link-row" style="margin-top:1rem">
-        <button class="btn small" id="copyOrder">Copy order</button>
-        <button class="btn small ghost" id="refreshBtn">Refresh</button>
-        <button class="btn small ghost" id="lockBtn">Lock orders</button>
+      <div class="btn-row">
+        <button type="button" class="btn sm" id="copyOrder">Copy order</button>
+        <button type="button" class="btn sm ghost" id="refreshBtn">Refresh</button>
+        <button type="button" class="btn sm ghost" id="lockBtn">Lock orders</button>
       </div>
     </div>
 
-    <h2 class="section-title">Bar tab</h2>
-    <div class="kitchen">
+    <div class="section-head">
+      <h2>Bar tab</h2>
+      <p>Cocktails you're covering, at £16 each.</p>
+    </div>
+
+    <div class="panel">
       <ul class="lines" id="barList"></ul>
     </div>
 
-    <h2 class="section-title">Guests</h2>
-    <p class="center muted small">Rename a guest, then send them their own link.</p>
+    <div class="section-head">
+      <h2>Guests</h2>
+      <p>Rename a guest, then send them their own link.</p>
+    </div>
+
     <div id="guestList"></div>
 
-    <p class="center muted small" style="margin:2rem 0">Auto-refreshes every 15 seconds.</p>
+    <p class="muted state-msg" style="margin:2rem 0">Refreshes every 15 seconds.</p>
+
   </div>
 </main>
 

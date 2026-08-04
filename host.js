@@ -11,6 +11,7 @@ function toast(msg, kind = '') {
   document.querySelector('.toast')?.remove();
   const node = document.createElement('div');
   node.className = `toast ${kind}`;
+  node.setAttribute('role', 'status');
   node.textContent = msg;
   document.body.appendChild(node);
   toastTimer = setTimeout(() => node.remove(), 3000);
@@ -19,22 +20,30 @@ function toast(msg, kind = '') {
 const guestLink = (token) =>
   `${location.origin}${location.pathname.replace(/host\.html$/, '')}order.html?t=${token}`;
 
-function lineItem(line, showMoney = true) {
+function lineItem(line, withPrice = true) {
   const li = document.createElement('li');
-  const left = document.createElement('span');
 
+  const left = document.createElement('span');
   const badge = document.createElement('span');
   badge.className = 'qty-badge';
   badge.textContent = `${line.qty}×`;
   left.append(badge, document.createTextNode(line.name));
-
   li.appendChild(left);
-  if (showMoney) {
-    const right = document.createElement('span');
-    right.textContent = money(line.line_total);
-    li.appendChild(right);
+
+  if (withPrice) {
+    const amount = document.createElement('span');
+    amount.className = 'amount';
+    amount.textContent = money(line.line_total);
+    li.appendChild(amount);
   }
   return li;
+}
+
+function emptyLine(node, text) {
+  const li = document.createElement('li');
+  li.className = 'recap-empty';
+  li.textContent = text;
+  node.appendChild(li);
 }
 
 function renderStats() {
@@ -42,41 +51,40 @@ function renderStats() {
   const pot = Number(data.pot_used);
   const total = personal + pot;
   const cap = Number(data.rules.table_cap);
+  const potCap = Number(data.rules.pot_cap);
   const submitted = data.guests.filter((g) => g.submitted_at).length;
   const barTotal = data.bar.reduce((s, b) => s + Number(b.line_total), 0);
 
   el('statTotal').textContent = money(total);
   el('statTotal').classList.toggle('over', total > cap);
-  el('statBreakdown').textContent = `${money(personal)} personal + ${money(pot)} pot`;
-  el('statPot').textContent = `${money(pot)} / ${money(data.rules.pot_cap)}`;
-  el('statPot').classList.toggle('over', pot > Number(data.rules.pot_cap));
+  el('statBreakdown').textContent = `${money(personal)} personal · ${money(pot)} pot`;
+
+  el('statPot').textContent = `${money(pot)} / ${money(potCap)}`;
+  el('statPot').classList.toggle('over', pot > potCap);
+
   el('statCap').textContent = money(cap);
   el('statSubmitted').textContent = `${submitted} / ${data.guests.length}`;
   el('statCocktails').textContent = money(barTotal);
 }
 
 function renderLock() {
-  const box = el('lockBanner');
+  const box = el('lockNotice');
   box.textContent = '';
   el('lockBtn').textContent = data.rules.locked ? 'Unlock orders' : 'Lock orders';
 
   if (data.rules.locked) {
-    const b = document.createElement('div');
-    b.className = 'banner warn';
-    b.textContent = 'Orders are locked. Guests can no longer change their picks.';
-    box.appendChild(b);
+    const n = document.createElement('p');
+    n.className = 'notice warn';
+    n.textContent = 'Orders are locked. Guests can no longer change their picks.';
+    box.appendChild(n);
   }
 }
 
 function renderKitchen() {
   const list = el('kitchenList');
   list.textContent = '';
-
   if (!data.kitchen.length) {
-    const li = document.createElement('li');
-    li.className = 'muted';
-    li.textContent = 'Nothing ordered yet.';
-    list.appendChild(li);
+    emptyLine(list, 'Nothing ordered yet. Send the guest links out.');
     return;
   }
   data.kitchen.forEach((line) => list.appendChild(lineItem(line)));
@@ -85,15 +93,26 @@ function renderKitchen() {
 function renderBar() {
   const list = el('barList');
   list.textContent = '';
-
   if (!data.bar.length) {
-    const li = document.createElement('li');
-    li.className = 'muted';
-    li.textContent = 'No cocktails picked yet.';
-    list.appendChild(li);
+    emptyLine(list, 'No cocktails picked yet.');
     return;
   }
   data.bar.forEach((line) => list.appendChild(lineItem(line)));
+}
+
+function statusPill(g) {
+  const pill = document.createElement('span');
+  if (g.submitted_at) {
+    pill.className = 'pill done';
+    pill.textContent = 'Submitted';
+  } else if (Number(g.food_total) + Number(g.pot_total) > 0) {
+    pill.className = 'pill draft';
+    pill.textContent = 'In progress';
+  } else {
+    pill.className = 'pill';
+    pill.textContent = 'Not started';
+  }
+  return pill;
 }
 
 function renderGuests() {
@@ -102,7 +121,7 @@ function renderGuests() {
 
   for (const g of data.guests) {
     const card = document.createElement('div');
-    card.className = 'guest';
+    card.className = 'panel';
 
     const head = document.createElement('div');
     head.className = 'guest-head';
@@ -126,44 +145,27 @@ function renderGuests() {
       }
     };
 
-    const pill = document.createElement('span');
-    if (g.submitted_at) {
-      pill.className = 'pill done';
-      pill.textContent = 'Submitted';
-    } else if (Number(g.food_total) > 0) {
-      pill.className = 'pill draft';
-      pill.textContent = 'In progress';
-    } else {
-      pill.className = 'pill';
-      pill.textContent = 'Not started';
-    }
+    const own = document.createElement('span');
+    own.className = 'pill';
+    own.textContent = `${money(g.food_total)} own`;
 
-    const spend = document.createElement('span');
-    spend.className = 'pill';
-    spend.textContent = `${money(g.food_total)} own`;
+    const pot = document.createElement('span');
+    pot.className = 'pill';
+    pot.textContent = `${money(g.pot_total)} pot`;
 
-    const potSpend = document.createElement('span');
-    potSpend.className = 'pill';
-    potSpend.textContent = `${money(g.pot_total)} pot`;
-
-    head.append(nameInput, pill, spend, potSpend);
+    head.append(nameInput, statusPill(g), own, pot);
     card.appendChild(head);
 
-    if (g.food_lines.length || g.pot_lines.length || g.cocktail_lines.length) {
+    const all = [
+      ...g.food_lines.map((l) => [l, true]),
+      ...g.pot_lines.map((l) => [l, true]),
+      ...g.cocktail_lines.map((l) => [l, false]),
+    ];
+
+    if (all.length) {
       const lines = document.createElement('ul');
       lines.className = 'lines';
-      g.food_lines.forEach((l) => lines.appendChild(lineItem(l)));
-      g.pot_lines.forEach((l) => {
-        const li = lineItem(l);
-        li.title = 'For the table';
-        li.style.color = 'var(--gold-soft)';
-        lines.appendChild(li);
-      });
-      g.cocktail_lines.forEach((l) => {
-        const li = lineItem(l, false);
-        li.style.color = 'var(--gold-soft)';
-        lines.appendChild(li);
-      });
+      all.forEach(([line, withPrice]) => lines.appendChild(lineItem(line, withPrice)));
       card.appendChild(lines);
     }
 
@@ -177,7 +179,8 @@ function renderGuests() {
     link.onclick = () => link.select();
 
     const copy = document.createElement('button');
-    copy.className = 'btn small ghost';
+    copy.type = 'button';
+    copy.className = 'btn sm ghost';
     copy.textContent = 'Copy';
     copy.onclick = async () => {
       await navigator.clipboard.writeText(guestLink(g.token));
@@ -219,17 +222,21 @@ async function load(quiet = false) {
   try {
     data = await rpc('bday_host_summary', { p_host_token: HOST });
 
+    const when = new Date(data.rules.event_date + 'T00:00:00').toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
     el('eventName').textContent = data.rules.event_name;
-    el('eventDate').textContent = new Date(data.rules.event_date + 'T00:00:00').toLocaleDateString(
-      'en-GB',
-      { weekday: 'long', day: 'numeric', month: 'long' },
-    );
+    el('eventMeta').textContent = `${data.rules.venue} · ${when}`;
 
-    el('state').hidden = true;
+    el('loading').hidden = true;
+    el('failed').hidden = true;
     el('app').hidden = false;
     renderAll();
   } catch (err) {
-    if (!quiet) el('state').textContent = friendlyError(err);
+    if (quiet) return;
+    el('loading').hidden = true;
+    el('failed').hidden = false;
+    el('failedMsg').textContent = friendlyError(err);
   }
 }
 
@@ -251,7 +258,9 @@ el('lockBtn').onclick = async () => {
 };
 
 if (!HOST) {
-  el('state').textContent = 'Host link is missing its key.';
+  el('loading').hidden = true;
+  el('failed').hidden = false;
+  el('failedMsg').textContent = 'Host link is missing its key.';
 } else {
   load();
   setInterval(() => load(true), 15000);
