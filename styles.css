@@ -1,26 +1,38 @@
 /* ============================================================
    EADN Birthday — design tokens
-   Product register: one family, fixed rem scale, restrained accent.
+
+   Palette and type lifted from eadnstpauls.co.uk so the ordering page
+   reads as the restaurant's, not a generic dark theme:
+     #f3a86e apricot (their dominant accent)  #c9a96e gold
+     #351b21 plum    #b1b0ac warm grey        #1e1e1e near-black
+   Type is their pairing too: Space Grotesk with Space Mono for figures.
+
+   Product register: fixed rem scale, accent reserved for action and state.
    ============================================================ */
 
 :root {
-  /* surfaces — near-black, tinted a touch toward the gold accent */
-  --bg: oklch(0.16 0.004 85);
-  --surface: oklch(0.21 0.005 85);
-  --surface-2: oklch(0.25 0.006 85);
-  --line: oklch(0.31 0.007 85);
-  --line-strong: oklch(0.42 0.008 85);
+  /* surfaces — near-black warmed toward the brand plum */
+  --bg: oklch(0.17 0.008 25);
+  --surface: oklch(0.22 0.012 25);
+  --surface-2: oklch(0.26 0.016 25);
+  --line: oklch(0.32 0.014 25);
+  --line-strong: oklch(0.44 0.016 25);
 
-  /* ink — verified ≥6:1 on --bg and --surface */
-  --ink: oklch(0.96 0.006 85);
-  --ink-muted: oklch(0.72 0.011 85);
+  /* ink — #b1b0ac muted measures 8.8:1 on --bg */
+  --ink: oklch(0.97 0.004 60);
+  --ink-muted: oklch(0.74 0.006 80);
 
-  /* accent — primary actions, current selection, state. Not decoration. */
-  --accent: oklch(0.74 0.13 85);
-  --accent-bright: oklch(0.85 0.11 85);
-  --accent-ink: oklch(0.18 0.02 85);
-  --accent-dim: oklch(0.74 0.13 85 / 0.14);
-  --accent-line: oklch(0.74 0.13 85 / 0.4);
+  /* accent — EADN apricot. 9.6:1 on --bg, 10.6:1 against its own ink. */
+  --accent: #f3a86e;
+  --accent-bright: #f8c093;
+  --accent-ink: #24120c;
+  --accent-dim: rgb(243 168 110 / 0.13);
+  --accent-line: rgb(243 168 110 / 0.38);
+
+  /* secondary brand gold — the pot, kept distinct from the primary accent */
+  --gold: #c9a96e;
+  --gold-dim: rgb(201 169 110 / 0.12);
+  --gold-line: rgb(201 169 110 / 0.4);
 
   /* semantic state */
   --ok: oklch(0.72 0.12 155);
@@ -35,6 +47,10 @@
   --s5: 1.5rem;
   --s6: 2rem;
   --s7: 3rem;
+
+  /* type — EADN's own pairing: geometric sans + mono, a real contrast axis */
+  --font: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* type scale — fixed rem, ratio ~1.2 */
   --t-xs: 0.8125rem;   /* 13px — labels only, never body */
@@ -72,10 +88,19 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   font-size: var(--t-base);
   line-height: 1.5;
   padding-bottom: 7.5rem;
+}
+
+/* Space Mono carries every figure: prices, budgets, counts, tokens. Numbers
+   line up column to column, and it's the restaurant's own accent face. */
+.gauge-left, .gauge-right, .item-price, .stepper .qty, .brief-row .figure,
+.stat .value, .lines .amount, .lines .qty-badge, .total b, .pill,
+.nav-context, .link-row input {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .wrap { max-width: 44rem; margin: 0 auto; padding: 0 var(--s4); }
@@ -167,6 +192,8 @@ body {
 .step-head { padding: var(--s6) 0 var(--s5); }
 
 .step-title {
+  font-family: var(--font);
+  font-weight: 700;
   font-size: var(--t-xl);
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -231,7 +258,7 @@ body {
   background: var(--surface);
 }
 
-.gauge.pot { border-color: var(--accent-line); background: var(--accent-dim); }
+.gauge.pot { border-color: var(--gold-line); background: var(--gold-dim); }
 
 .gauge-row {
   display: flex;
@@ -271,6 +298,7 @@ body {
   transition: transform var(--mid) var(--ease), background var(--mid) var(--ease);
 }
 
+.gauge.pot .meter span { background: var(--gold); }
 .meter.warn span { background: var(--warn); }
 .meter.full span { background: var(--danger); }
 
@@ -587,6 +615,7 @@ body {
 }
 
 .stat .label { color: var(--ink-muted); font-size: var(--t-xs); }
+.stat .label + .value + .label { margin-top: var(--s1); font-family: var(--font-mono); }
 .stat .value { font-size: var(--t-lg); font-weight: 700; margin-top: var(--s1); font-variant-numeric: tabular-nums; }
 .stat .value.over { color: var(--danger); }
 
@@ -682,4 +711,36 @@ body {
   .meter span { transition: none; }
   .stepper button:active:not(:disabled),
   .btn:active:not(:disabled) { transform: none; }
+}
+
+/* ============================================================
+   booking summary — the reservation, straight from the confirmation
+   ============================================================ */
+
+.booking {
+  margin: 0 0 var(--s6);
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.booking > div {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: var(--s3);
+  align-items: baseline;
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.booking dt {
+  color: var(--ink-muted);
+  font-size: var(--t-xs);
+  font-family: var(--font-mono);
+}
+
+.booking dd {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 500;
 }

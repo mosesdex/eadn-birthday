@@ -264,7 +264,7 @@ function renderReview() {
   if (state.submitted) {
     const n = document.createElement('p');
     n.className = 'notice';
-    n.textContent = 'Sent. Dex has your order.';
+    n.textContent = 'Sent. Moses has your order.';
     box.appendChild(n);
   }
 }
@@ -282,7 +282,9 @@ function navCopy() {
     next.textContent = 'Start';
     context.textContent = '';
   } else if (state.step === LAST) {
-    next.textContent = state.submitted ? 'Update my order' : 'Send to Dex';
+    next.textContent = state.submitted
+      ? 'Update my order'
+      : `Send to ${state.rules.host_name}`;
     context.textContent = `${money(foodTotal())} of yours`;
   } else {
     const picked = pickedIn(step);
@@ -396,7 +398,7 @@ function fail(msg) {
 
 async function boot() {
   if (!TOKEN) {
-    fail('You need your own invite link. Ask Dex to send yours over.');
+    fail('You need your own invite link. Ask Moses to send yours over.');
     return;
   }
 
@@ -413,23 +415,40 @@ async function boot() {
     state.cocktails = toCounts(mine.order.cocktail_lines);
     absorb(mine);
 
-    const when = new Date(state.rules.event_date + 'T00:00:00').toLocaleDateString('en-GB', {
+    const r = state.rules;
+    const when = new Date(r.event_date + 'T00:00:00').toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long',
     });
 
     el('guestName').textContent = mine.guest.name;
-    el('venueLine').textContent = `${state.rules.venue} · ${when}`;
-    el('briefPot').textContent = `${money(state.rules.pot_cap)} shared`;
-    el('briefFood').textContent = `${money(state.rules.food_cap)} each`;
-    el('briefCk').textContent = `${state.rules.cocktail_cap} each`;
+    el('venueLine').textContent = r.venue;
+    el('bkWhen').textContent = `${when}, ${r.event_time}`;
+    el('bkTable').textContent = 'Table of 6';
+    el('bkWhere').textContent = r.address;
+
+    el('briefPot').textContent = `${money(r.pot_cap)} shared`;
+    el('briefFood').textContent = `${money(r.food_cap)} each`;
+    el('briefCk').textContent = `${r.cocktail_cap} each`;
+
+    // The celebrant is also the host, so the drinks copy can't say "on Moses" to Moses.
+    const celebrant = Boolean(mine.guest.celebrant);
+    el('briefDrinkTitle').textContent = celebrant
+      ? 'Drinks are on you'
+      : `Drinks are on ${r.host_name}`;
+    el('briefDrinkBody').textContent = celebrant
+      ? "It's your day. Pick your first two."
+      : `Pick your first two now. Want more at the table? ${r.host_name} has it.`;
+
     el('drinkLede').textContent =
-      `Pick up to ${state.rules.cocktail_cap}. These don't touch your food money.`;
+      `Pick up to ${r.cocktail_cap}. These don't come out of your food budget.`;
+
+    el('helloLead').textContent = celebrant ? 'Happy birthday,' : 'Hey';
     document.title = `${mine.guest.name} — pick your food`;
 
     if (state.rules.locked) {
       const n = document.createElement('p');
       n.className = 'notice warn';
-      n.textContent = 'Orders are locked in. Talk to Dex if you need a change.';
+      n.textContent = 'Orders are locked in. Talk to Moses if you need a change.';
       el('lockNotice').appendChild(n);
     }
 

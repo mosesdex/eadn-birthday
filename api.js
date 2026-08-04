@@ -2,9 +2,9 @@ import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
 // Human-readable text for the errors bday_save_order can raise.
 const ERRORS = {
-  invalid_token: "That link isn't valid. Ask Dex to resend yours.",
+  invalid_token: "That link isn't valid. Ask Moses to resend yours.",
   invalid_host_token: 'Host link is not valid.',
-  orders_locked: 'Orders are locked in — talk to Dex.',
+  orders_locked: 'Orders are locked in. Talk to Moses.',
   over_budget: "That's over your own food budget.",
   pot_full: 'The shared table pot is empty.',
   too_many_cocktails: 'Two cocktails each, max.',

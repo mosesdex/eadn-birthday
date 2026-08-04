@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#100b0c">
 <title>Pick your food — EADN St. Paul's</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -31,8 +34,14 @@
     <!-- welcome -->
     <section class="step" data-step="0" aria-labelledby="hello">
       <div class="step-head">
-        <h1 class="hello" id="hello">Hey <span id="guestName"></span></h1>
+        <h1 class="hello" id="hello"><span id="helloLead">Hey</span> <span id="guestName"></span></h1>
         <p class="venue-line" id="venueLine"></p>
+
+        <dl class="booking">
+          <div><dt>When</dt><dd id="bkWhen"></dd></div>
+          <div><dt>Table</dt><dd id="bkTable"></dd></div>
+          <div><dt>Where</dt><dd id="bkWhere"></dd></div>
+        </dl>
 
         <div class="brief">
           <div class="brief-row">
@@ -54,8 +63,8 @@
           <div class="brief-row">
             <span class="glyph" aria-hidden="true">🍹</span>
             <div>
-              <h2>Drinks are on me</h2>
-              <p>Pick your first two now. Want more at the table? I've got it.</p>
+              <h2 id="briefDrinkTitle">Drinks are covered</h2>
+              <p id="briefDrinkBody">Pick your first two now.</p>
             </div>
             <span class="figure" id="briefCk"></span>
           </div>
@@ -116,7 +125,7 @@
     <!-- drinks -->
     <section class="step" data-step="4" aria-labelledby="t4">
       <div class="step-head">
-        <h1 class="step-title" id="t4">Drinks on me</h1>
+        <h1 class="step-title" id="t4">Drinks</h1>
         <p class="step-lede" id="drinkLede"></p>
       </div>
       <div id="listDrinks"></div>
