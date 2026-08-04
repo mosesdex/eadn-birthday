@@ -8,7 +8,7 @@ const STEPS = [
   { id: 'welcome', label: 'Start' },
   {
     id: 'share', label: 'Share', bucket: 'food', list: 'listShare', tally: 'shareTally',
-    sections: ['Appetisers', 'Raw', 'Small Dishes', 'Skewers', 'Sushi Rolls', 'Sides'],
+    sections: ['Appetisers', 'Raw', 'Small Dishes', 'Skewers', 'Sushi & Sashimi', 'Sides'],
   },
   {
     id: 'main', label: 'Main', bucket: 'food', list: 'listMain', tally: 'mainTally',
