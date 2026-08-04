@@ -17,8 +17,16 @@ function toast(msg, kind = '') {
   toastTimer = setTimeout(() => node.remove(), 3000);
 }
 
-const guestLink = (token) =>
-  `${location.origin}${location.pathname.replace(/host\.html$/, '')}order.html?t=${token}`;
+/* The name is cosmetic: it rides in the URL so six near-identical links are
+   tellable apart in a chat window. Auth is the token alone; `for` is ignored
+   by every RPC, so editing it changes nothing. */
+const slug = (name) =>
+  name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const guestLink = (token, name) => {
+  const base = `${location.origin}${location.pathname.replace(/host\.html$/, '')}order.html`;
+  return `${base}?for=${slug(name)}&t=${token}`;
+};
 
 function lineItem(line, withPrice = true) {
   const li = document.createElement('li');
@@ -174,7 +182,7 @@ function renderGuests() {
 
     const link = document.createElement('input');
     link.readOnly = true;
-    link.value = guestLink(g.token);
+    link.value = guestLink(g.token, g.name);
     link.setAttribute('aria-label', `Invite link for ${g.name}`);
     link.onclick = () => link.select();
 
@@ -183,7 +191,7 @@ function renderGuests() {
     copy.className = 'btn sm ghost';
     copy.textContent = 'Copy';
     copy.onclick = async () => {
-      await navigator.clipboard.writeText(guestLink(g.token));
+      await navigator.clipboard.writeText(guestLink(g.token, g.name));
       toast(`Link for ${g.name} copied`, 'ok');
     };
 

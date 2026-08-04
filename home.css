@@ -1,0 +1,278 @@
+/* ============================================================
+   Landing page — luxury brown and white.
+
+   Brand register: this page IS the impression, so it commits. Espresso
+   brown carries the masthead as a full surface rather than sitting as a
+   tint on a beige wash; true white is the counterpoint below it. Accents
+   stay EADN's own apricot and gold.
+   ============================================================ */
+
+:root {
+  --espresso: #241812;
+  --coffee: #3b2a1f;
+  --walnut: #5c4231;
+  --tan: #a9866b;
+
+  --white: #ffffff;
+  --paper: #f7f4f1;
+  --rule: #e2dad3;
+
+  --apricot: #f3a86e;
+  --gold: #c9a96e;
+
+  --ink-dark: #1c120d;
+  --ink-body: #4a3a31;
+
+  --font: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 5rem;
+
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--ink-body);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.shell { max-width: 60rem; margin: 0 auto; padding: 0 var(--s5); }
+
+:focus-visible {
+  outline: 2px solid var(--walnut);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ---------- masthead: the brown commits to the full surface ---------- */
+
+.masthead {
+  background: var(--espresso);
+  color: var(--white);
+  padding: var(--s8) 0 var(--s7);
+  position: relative;
+  overflow: hidden;
+}
+
+/* A slow warm bloom, not a decorative gradient overlay. */
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -10%;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(243 168 110 / 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+.masthead .shell { position: relative; }
+
+.dateline {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--apricot);
+  margin: 0 0 var(--s5);
+  letter-spacing: 0.02em;
+}
+
+.masthead h1 {
+  font-size: clamp(2.5rem, 9vw, 5rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  margin: 0 0 var(--s5);
+  text-wrap: balance;
+  max-width: 16ch;
+}
+
+.masthead h1 em { font-style: normal; color: var(--apricot); }
+
+.standfirst {
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  color: rgb(255 255 255 / 0.76);
+  margin: 0;
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+/* ---------- the reservation, set as a record ---------- */
+
+.record {
+  margin: var(--s7) 0 0;
+  border-top: 1px solid rgb(255 255 255 / 0.16);
+}
+
+.record > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: var(--s4);
+  align-items: baseline;
+  padding: var(--s4) 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.16);
+}
+
+.record dt {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--gold);
+}
+
+.record dd {
+  margin: 0;
+  color: var(--white);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+
+/* ---------- white body ---------- */
+
+.band { padding: var(--s8) 0; }
+
+.band h2 {
+  font-size: clamp(1.5rem, 4vw, 2.125rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--ink-dark);
+  margin: 0 0 var(--s4);
+  text-wrap: balance;
+  max-width: 20ch;
+}
+
+.band p {
+  margin: 0 0 var(--s4);
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+.band p:last-child { margin-bottom: 0; }
+
+.lede { font-size: 1.125rem; color: var(--ink-dark); }
+
+/* the three parts of the night, as an ordered record rather than cards */
+
+.parts {
+  margin: var(--s7) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: part;
+  border-top: 1px solid var(--rule);
+}
+
+.parts li {
+  counter-increment: part;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  gap: var(--s4);
+  align-items: baseline;
+  padding: var(--s5) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Walnut, not tan: tan measured 3.33:1 on white and these numerals are
+   real text at 13px. */
+.parts li::before {
+  content: counter(part, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--walnut);
+}
+
+.parts h3 {
+  margin: 0 0 var(--s2);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink-dark);
+  letter-spacing: -0.01em;
+}
+
+.parts p { margin: 0; font-size: 0.9375rem; }
+
+.parts .figure {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--walnut);
+  white-space: nowrap;
+}
+
+/* ---------- the access notice: the actual job of this page ---------- */
+
+.gate {
+  background: var(--paper);
+  border-radius: 16px;
+  padding: var(--s6);
+  margin: var(--s7) 0 0;
+  border: 1px solid var(--rule);
+}
+
+.gate h2 { margin-bottom: var(--s3); }
+
+.gate p { color: var(--ink-body); }
+
+.gate .hint {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--walnut);
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: var(--s3) var(--s4);
+  margin-top: var(--s5);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* ---------- footer ---------- */
+
+.foot {
+  background: var(--espresso);
+  color: rgb(255 255 255 / 0.72);
+  padding: var(--s7) 0;
+  font-size: 0.9375rem;
+}
+
+.foot a {
+  color: var(--apricot);
+  text-decoration: none;
+  border-bottom: 1px solid rgb(243 168 110 / 0.4);
+  transition: border-color 150ms var(--ease);
+}
+
+.foot a:hover { border-bottom-color: var(--apricot); }
+
+.foot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s5) var(--s7);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.foot p { margin: 0 0 var(--s2); }
+.foot .label { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--gold); }
+
+@media (max-width: 34rem) {
+  .record > div { grid-template-columns: 5.5rem 1fr; }
+  .parts li { grid-template-columns: 2rem 1fr; }
+  .parts .figure { grid-column: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 1ms !important; }
+}
