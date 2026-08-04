@@ -258,7 +258,7 @@ function renderReview() {
   if (state.submitted) {
     const n = document.createElement('p');
     n.className = 'notice';
-    n.textContent = `Sent. ${state.rules.host_name} has your order.`;
+    n.textContent = `Sent. Your order is in with ${state.rules.venue}.`;
     box.appendChild(n);
   }
 }
@@ -278,7 +278,7 @@ function navCopy() {
   } else if (state.step === LAST) {
     next.textContent = state.submitted
       ? 'Update my order'
-      : `Send to ${state.rules.host_name}`;
+      : `Send to ${state.rules.venue}`;
     context.textContent = '';
   } else {
     const picked = pickedIn(step);

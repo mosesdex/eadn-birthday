@@ -775,3 +775,94 @@ body {
 
 .item.blocked { opacity: 0.5; }
 .item.blocked .item-desc { display: none; }
+
+/* ============================================================
+   living background
+
+   Three soft blooms drifting behind the content, plus a fine grain.
+   Everything animates on transform only, so it stays on the compositor
+   and never touches layout. Radial gradients rather than blur filters:
+   the same softness with none of the repaint cost over a full viewport.
+   ============================================================ */
+
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient i {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  will-change: transform;
+  opacity: 0.5;
+}
+
+.ambient i:nth-child(1) {
+  width: 40rem;
+  height: 40rem;
+  top: -14rem;
+  left: -12rem;
+  background: radial-gradient(circle, rgb(243 168 110 / 0.20), transparent 66%);
+  animation: drift-a 46s var(--ease) infinite alternate;
+}
+
+.ambient i:nth-child(2) {
+  width: 34rem;
+  height: 34rem;
+  bottom: -12rem;
+  right: -10rem;
+  background: radial-gradient(circle, rgb(201 169 110 / 0.17), transparent 66%);
+  animation: drift-b 61s var(--ease) infinite alternate;
+}
+
+.ambient i:nth-child(3) {
+  width: 30rem;
+  height: 30rem;
+  top: 38%;
+  right: -14rem;
+  background: radial-gradient(circle, rgb(120 40 48 / 0.30), transparent 68%);
+  animation: drift-c 73s var(--ease) infinite alternate;
+}
+
+/* Grain sits on top of the blooms to stop them banding on dark screens. */
+.ambient::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(9rem, 6rem, 0) scale(1.18); }
+}
+
+@keyframes drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to   { transform: translate3d(-8rem, -5rem, 0) scale(1); }
+}
+
+@keyframes drift-c {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-6rem, -9rem, 0) scale(1.22); }
+}
+
+/* Content rides above the ambient layer. */
+.wrap,
+main { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient i { animation: none; }
+}
+
+/* The venue name is a long button label; give it the room on narrow phones. */
+@media (max-width: 23rem) {
+  .nav-inner { gap: var(--s1); }
+  .btn { padding: 0 var(--s3); }
+  .btn.ghost { padding: 0 var(--s2); }
+}

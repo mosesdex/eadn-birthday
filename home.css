@@ -276,3 +276,60 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 1ms !important; }
 }
+
+/* ============================================================
+   living background — the espresso surfaces breathe
+   ============================================================ */
+
+.masthead::before {
+  animation: bloom-a 52s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  will-change: transform;
+}
+
+.masthead::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  left: -12%;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(201 169 110 / 0.13), transparent 68%);
+  pointer-events: none;
+  will-change: transform;
+  animation: bloom-b 67s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.foot { position: relative; overflow: hidden; }
+
+.foot::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -8%;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(243 168 110 / 0.12), transparent 70%);
+  pointer-events: none;
+  will-change: transform;
+  animation: bloom-a 74s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.foot .shell { position: relative; }
+
+@keyframes bloom-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-7rem, 5rem, 0) scale(1.25); }
+}
+
+@keyframes bloom-b {
+  from { transform: translate3d(0, 0, 0) scale(1.15); }
+  to   { transform: translate3d(8rem, -4rem, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .masthead::before,
+  .masthead::after,
+  .foot::before { animation: none; }
+}
