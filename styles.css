@@ -96,7 +96,7 @@ body {
 
 /* Space Mono carries every figure: prices, budgets, counts, tokens. Numbers
    line up column to column, and it's the restaurant's own accent face. */
-.gauge-left, .gauge-right, .item-price, .stepper .qty, .brief-row .figure,
+.gauge-left, .gauge-right, .item-price, .stepper .qty,
 .stat .value, .lines .amount, .lines .qty-badge, .total b, .pill,
 .nav-context, .link-row input {
   font-family: var(--font-mono);
@@ -234,15 +234,19 @@ body {
 }
 
 .brief-row:last-child { border-bottom: 1px solid var(--line); }
-.brief-row .glyph { font-size: var(--t-lg); line-height: 1; align-self: center; }
+.brief-row .ico {
+  width: 26px;
+  height: 26px;
+  align-self: center;
+  color: var(--accent);
+}
 .brief-row h2 { margin: 0 0 var(--s1); font-size: var(--t-base); font-weight: 600; }
 .brief-row p { margin: 0; color: var(--ink-muted); font-size: var(--t-sm); }
 
 .brief-row .figure {
-  font-size: var(--t-md);
-  font-weight: 700;
+  font-size: var(--t-sm);
+  font-weight: 600;
   color: var(--accent-bright);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -744,3 +748,30 @@ body {
   font-size: var(--t-sm);
   font-weight: 500;
 }
+
+/* ============================================================
+   counts, not amounts — guests never see the budget
+   ============================================================ */
+
+.tally {
+  display: inline-block;
+  margin: var(--s4) 0 0;
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-pill);
+  background: var(--accent-dim);
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+}
+
+/* Why something can't be added, said in words rather than money. */
+.item-why {
+  margin: var(--s2) 0 0;
+  font-size: var(--t-xs);
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.item.blocked { opacity: 0.5; }
+.item.blocked .item-desc { display: none; }

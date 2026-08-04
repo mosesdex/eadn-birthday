@@ -1,8 +1,12 @@
 # EADN Birthday Pre-Order
 
 Food pre-ordering for a birthday dinner at [EADN St. Paul's](https://eadnstpauls.co.uk/),
-Thursday 6 August 2026. Six guests. £45 each on their own plate, a shared £120
-table pot for starters and sides, drinks on the host.
+Thursday 6 August 2026. Six guests.
+
+Guests never see a figure. They pick, and the app quietly refuses anything that
+would go over. All budgets live in `bday_config` and are visible only on the
+host dashboard: £45 each for a main and dessert, £25 each toward shared plates
+for the middle (£150 across the table), two cocktails each. £420 all in.
 
 The guest page is a five-step flow built for a phone: welcome, table pot, main,
 dessert, drinks, review.
@@ -19,8 +23,9 @@ Static site on GitHub Pages, Supabase for storage. No build step.
 
 ## How the budget cap works
 
-Each guest has a £45 food allowance. The UI greys out the `+` button on anything
-that would breach it, but **that is only a convenience**. The real enforcement is
+Each guest has three separate allowances: their own plate, their share of the
+table dishes, and their drinks. The UI greys out the `+` button on anything that
+would breach one, but **that is only a convenience**. The real enforcement is
 in `bday_save_order`, a Postgres function that:
 
 - recomputes every price from the `bday_menu` table, ignoring whatever the client sent
