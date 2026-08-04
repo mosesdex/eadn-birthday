@@ -6,14 +6,8 @@ const TOKEN = param('t');
    those items are charged to. Adding a step is a one-line change. */
 const STEPS = [
   { id: 'welcome', label: 'Start' },
-  {
-    id: 'plates', label: 'Plates', bucket: 'food', list: 'listShare', tally: 'shareTally',
-    sections: ['Appetisers', 'Small Dishes', 'Skewers', 'Sushi', 'Sides'],
-  },
-  {
-    id: 'main', label: 'Main', bucket: 'food', list: 'listMain', tally: 'mainTally',
-    sections: ['Speciality', 'Rice & Noodles'],
-  },
+  { id: 'starter', label: 'Starter', bucket: 'food', course: 'starter', list: 'listShare', tally: 'shareTally' },
+  { id: 'main', label: 'Main', bucket: 'food', course: 'main', list: 'listMain', tally: 'mainTally' },
   { id: 'drinks', label: 'Drinks', bucket: 'cocktails', kind: 'cocktail', list: 'listDrinks', tally: 'ckTally' },
   { id: 'review', label: 'Review' },
 ];
@@ -45,16 +39,29 @@ const countOf = (counts) => Object.values(counts).reduce((a, b) => a + b, 0);
 
 const foodLeft = () => Number(state.rules.food_cap) - sumOf(state.food);
 const cocktailsLeft = () => Number(state.rules.cocktail_cap) - countOf(state.cocktails);
-const dishesLeft = () => Number(state.rules.food_item_cap) - countOf(state.food);
+const chosenIn = (course) =>
+  state.menu
+    .filter((m) => m.course === course)
+    .reduce((n, m) => n + (state.food[m.id] || 0), 0);
 
-const hasFood = () => countOf(state.food) > 0;
+/* Hold back the price of the cheapest main while choosing a starter, so a
+   guest can never pick something that leaves nothing they can afford next. */
+function budgetFor(course) {
+  const left = foodLeft();
+  if (course === 'starter' && chosenIn('main') === 0) {
+    return left - Number(state.rules.cheapest_main);
+  }
+  return left;
+}
+
+const hasFood = () => chosenIn('starter') > 0 && chosenIn('main') > 0;
 
 const bucketOf = (name) => (name === 'food' ? state.food : state.cocktails);
 
 function itemsFor(step) {
   if (step.kind === 'cocktail') return state.menu.filter((m) => m.kind === 'cocktail');
-  if (!step.sections) return [];
-  return state.menu.filter((m) => m.kind === 'food' && step.sections.includes(m.section));
+  if (!step.course) return [];
+  return state.menu.filter((m) => m.kind === 'food' && m.course === step.course);
 }
 
 const pickedIn = (step) => countOf(
@@ -68,9 +75,15 @@ function blockReason(item, step, qty) {
   if (step.kind === 'cocktail') {
     return cocktailsLeft() <= 0 ? `That's your ${state.rules.cocktail_cap}.` : null;
   }
-  if (qty >= Number(state.rules.max_per_dish)) return "That's enough of this one.";
-  if (dishesLeft() <= 0) return "That's plenty of food.";
-  return item.price > foodLeft() ? "Won't fit with what you've chosen." : null;
+  if (qty > 0) return 'Just one from this course.';
+  if (chosenIn(step.course) >= Number(state.rules.per_course_cap)) {
+    return 'Swap your current pick to choose this.';
+  }
+  return item.price > budgetFor(step.course)
+    ? (step.course === 'starter'
+        ? "Too much to leave room for a main."
+        : "Won't fit with your starter.")
+    : null;
 }
 
 /* ---------------- feedback ---------------- */
@@ -215,11 +228,7 @@ function renderTallies() {
       node.textContent = picked ? `${picked} of ${max} chosen` : `Choose up to ${max}`;
       continue;
     }
-    const max = Number(state.rules.food_item_cap);
-    const total = countOf(state.food);
-    node.textContent = picked
-      ? `${picked} chosen · ${Math.max(0, max - total)} of ${max} left`
-      : `Up to ${max} dishes in total`;
+    node.textContent = picked ? 'Chosen' : 'Choose one';
   }
 }
 
@@ -265,14 +274,14 @@ function renderReview() {
   if (!hasFood()) {
     const n = document.createElement('p');
     n.className = 'notice warn';
-    n.textContent = 'Pick at least one thing to eat before you send this over.';
+    n.textContent = 'Choose a starter and a main before you send this over.';
     box.appendChild(n);
 
     const jump = document.createElement('button');
     jump.type = 'button';
     jump.className = 'btn sm ghost';
-    jump.textContent = 'Back to the small plates';
-    jump.onclick = () => goto(1);
+    jump.textContent = chosenIn('starter') ? 'Choose a main' : 'Choose a starter';
+    jump.onclick = () => goto(chosenIn('starter') ? 2 : 1);
     box.appendChild(jump);
     return;
   }
@@ -309,7 +318,7 @@ function navCopy() {
     if (step.bucket === 'cocktails') {
       context.textContent = plural(Math.max(0, cocktailsLeft()), 'drink left', 'drinks left');
     } else {
-      context.textContent = plural(Math.max(0, dishesLeft()), 'dish left', 'dishes left');
+      context.textContent = pickedIn(step) ? 'Chosen' : 'Choose one';
     }
   }
 
@@ -336,15 +345,22 @@ function goto(n) {
 
 function change(item, step, delta) {
   const counts = bucketOf(step.bucket);
-  const next = (counts[item.id] || 0) + delta;
 
+  // One per course: picking a second dish swaps out the first.
+  if (delta > 0 && step.course) {
+    for (const m of state.menu) {
+      if (m.course === step.course && m.id !== item.id) delete counts[m.id];
+    }
+  }
+
+  const next = (counts[item.id] || 0) + delta;
   if (next <= 0) delete counts[item.id];
-  else counts[item.id] = Math.min(next, 10);
+  else counts[item.id] = 1;
 
   // Local guard for instant feedback; the server owns every limit.
   if (delta > 0) {
     const broke =
-      (step.bucket === 'food' && (foodLeft() < 0 || dishesLeft() < 0)) ||
+      (step.bucket === 'food' && foodLeft() < 0) ||
       (step.bucket === 'cocktails' && cocktailsLeft() < 0);
 
     if (broke) {
