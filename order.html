@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c">
+<title>Pick your food — EADN St. Paul's</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="budget" id="budgetBar" hidden>
+  <div class="budget-inner">
+    <div class="budget-row">
+      <span class="budget-left" id="budgetLeft">—</span>
+      <span class="cap" id="budgetCap"></span>
+    </div>
+    <div class="meter" id="meter"><span id="meterFill"></span></div>
+  </div>
+</div>
+
+<header class="masthead">
+  <p class="venue" id="venue">EADN St. Paul's</p>
+  <h1 class="event" id="eventName">Birthday Dinner</h1>
+  <p class="date" id="eventDate"></p>
+</header>
+
+<main class="wrap">
+  <div id="state" class="state">Loading your menu…</div>
+  <div id="app" hidden>
+    <p class="greet">Hey <strong id="guestName"></strong>, pick what you want to eat.</p>
+    <div id="statusBanner"></div>
+    <div id="foodSections"></div>
+
+    <section class="on-the-house">
+      <span class="house-badge">On Dex 🍹</span>
+      <p class="house-lede">Drinks are on me. Pick up to <b id="ckCap">2</b> cocktails.</p>
+      <p class="house-sub">Doesn't touch your food budget. Want more at the table? I've got it.</p>
+      <div id="cocktailList"></div>
+    </section>
+
+    <p class="center muted small" style="margin:2rem 0">
+      Prices are EADN's own. Your picks save automatically, so change them any time before Thursday.
+    </p>
+  </div>
+</main>
+
+<div class="footbar" id="footbar" hidden>
+  <div class="footbar-inner">
+    <div class="foot-total">
+      Your food
+      <b id="footTotal">£0.00</b>
+    </div>
+    <button class="btn" id="submitBtn">Submit order</button>
+  </div>
+</div>
+
+<script type="module" src="order.js"></script>
+</body>
+</html>
