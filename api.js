@@ -14,6 +14,8 @@ const ERRORS = {
   unknown_cocktail: "That cocktail isn't on the list.",
   bad_quantity: 'Invalid quantity.',
   nothing_chosen: 'Choose something to eat first.',
+  too_many_dishes: "That's plenty of food for one person.",
+  too_many_of_one: "That's enough of that one.",
   bad_payload: 'Something went wrong with that order.',
   bad_name: 'Name must be 1-40 characters.',
 };

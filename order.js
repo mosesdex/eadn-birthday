@@ -8,7 +8,7 @@ const STEPS = [
   { id: 'welcome', label: 'Start' },
   {
     id: 'plates', label: 'Plates', bucket: 'food', list: 'listShare', tally: 'shareTally',
-    sections: ['Appetisers', 'Raw', 'Small Dishes', 'Skewers', 'Sushi & Sashimi', 'Sides'],
+    sections: ['Appetisers', 'Small Dishes', 'Skewers', 'Sushi', 'Sides'],
   },
   {
     id: 'main', label: 'Main', bucket: 'food', list: 'listMain', tally: 'mainTally',
@@ -45,6 +45,7 @@ const countOf = (counts) => Object.values(counts).reduce((a, b) => a + b, 0);
 
 const foodLeft = () => Number(state.rules.food_cap) - sumOf(state.food);
 const cocktailsLeft = () => Number(state.rules.cocktail_cap) - countOf(state.cocktails);
+const dishesLeft = () => Number(state.rules.food_item_cap) - countOf(state.food);
 
 const hasFood = () => countOf(state.food) > 0;
 
@@ -63,10 +64,12 @@ const pickedIn = (step) => countOf(
 );
 
 /* Why an item can't be added, in words rather than money. */
-function blockReason(item, step) {
+function blockReason(item, step, qty) {
   if (step.kind === 'cocktail') {
     return cocktailsLeft() <= 0 ? `That's your ${state.rules.cocktail_cap}.` : null;
   }
+  if (qty >= Number(state.rules.max_per_dish)) return "That's enough of this one.";
+  if (dishesLeft() <= 0) return "That's plenty of food.";
   return item.price > foodLeft() ? "Won't fit with what you've chosen." : null;
 }
 
@@ -106,10 +109,10 @@ function renderRail() {
 function itemRow(m, step) {
   const counts = bucketOf(step.bucket);
   const qty = counts[m.id] || 0;
-  const reason = qty === 0 ? blockReason(m, step) : null;
+  const reason = blockReason(m, step, qty);
 
   const row = document.createElement('div');
-  row.className = `item${qty > 0 ? ' picked' : ''}${reason ? ' blocked' : ''}`;
+  row.className = `item${qty > 0 ? ' picked' : ''}${reason && qty === 0 ? ' blocked' : ''}`;
 
   const main = document.createElement('div');
 
@@ -131,7 +134,7 @@ function itemRow(m, step) {
     main.appendChild(desc);
   }
 
-  if (reason) {
+  if (reason && qty === 0) {
     const why = document.createElement('p');
     why.className = 'item-why';
     why.textContent = reason;
@@ -212,7 +215,11 @@ function renderTallies() {
       node.textContent = picked ? `${picked} of ${max} chosen` : `Choose up to ${max}`;
       continue;
     }
-    node.textContent = picked ? `${picked} chosen` : 'Nothing chosen yet';
+    const max = Number(state.rules.food_item_cap);
+    const total = countOf(state.food);
+    node.textContent = picked
+      ? `${picked} chosen · ${Math.max(0, max - total)} of ${max} left`
+      : `Up to ${max} dishes in total`;
   }
 }
 
@@ -302,7 +309,7 @@ function navCopy() {
     if (step.bucket === 'cocktails') {
       context.textContent = plural(Math.max(0, cocktailsLeft()), 'drink left', 'drinks left');
     } else {
-      context.textContent = picked ? plural(picked, 'chosen', 'chosen') : '';
+      context.textContent = plural(Math.max(0, dishesLeft()), 'dish left', 'dishes left');
     }
   }
 
@@ -337,7 +344,7 @@ function change(item, step, delta) {
   // Local guard for instant feedback; the server owns every limit.
   if (delta > 0) {
     const broke =
-      (step.bucket === 'food' && foodLeft() < 0) ||
+      (step.bucket === 'food' && (foodLeft() < 0 || dishesLeft() < 0)) ||
       (step.bucket === 'cocktails' && cocktailsLeft() < 0);
 
     if (broke) {
