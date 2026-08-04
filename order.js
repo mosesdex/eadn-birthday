@@ -7,7 +7,7 @@ const TOKEN = param('t');
 const STEPS = [
   { id: 'welcome', label: 'Start' },
   {
-    id: 'share', label: 'Share', bucket: 'food', list: 'listShare', tally: 'shareTally',
+    id: 'plates', label: 'Plates', bucket: 'food', list: 'listShare', tally: 'shareTally',
     sections: ['Appetisers', 'Raw', 'Small Dishes', 'Skewers', 'Sushi & Sashimi', 'Sides'],
   },
   {
@@ -264,7 +264,7 @@ function renderReview() {
     const jump = document.createElement('button');
     jump.type = 'button';
     jump.className = 'btn sm ghost';
-    jump.textContent = 'Back to the sharing plates';
+    jump.textContent = 'Back to the small plates';
     jump.onclick = () => goto(1);
     box.appendChild(jump);
     return;
