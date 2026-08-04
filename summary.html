@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#100b0c">
+<title>Full order — EADN St. Paul's</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="summary.css">
+</head>
+<body>
+
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<main class="wrap sheet">
+
+  <div id="loading" class="state" aria-live="polite">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <p class="state-msg">Loading the full order…</p>
+  </div>
+
+  <div id="failed" class="state" hidden>
+    <p class="state-msg" id="failedMsg"></p>
+  </div>
+
+  <div id="app" hidden>
+
+    <header class="doc-head">
+      <div>
+        <h1 id="docTitle">Full order</h1>
+        <p class="doc-meta" id="docMeta"></p>
+        <p class="doc-meta" id="docAddress"></p>
+      </div>
+      <div class="doc-actions">
+        <a class="btn sm ghost" id="backLink" href="#">Dashboard</a>
+        <button type="button" class="btn sm ghost" id="copyBtn">Copy</button>
+        <button type="button" class="btn sm" id="printBtn">Print</button>
+      </div>
+    </header>
+
+    <p class="doc-stamp" id="docStamp"></p>
+
+    <!-- money -->
+    <section class="doc-section">
+      <h2 class="doc-h2">The money</h2>
+      <table class="ledger">
+        <caption class="sr-only">Cost breakdown by category</caption>
+        <thead>
+          <tr><th scope="col">Item</th><th scope="col" class="num">Budget</th><th scope="col" class="num">Committed</th><th scope="col" class="num">Left</th></tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+        <tfoot id="ledgerFoot"></tfoot>
+      </table>
+      <p class="doc-note" id="moneyNote"></p>
+    </section>
+
+    <!-- per guest -->
+    <section class="doc-section">
+      <h2 class="doc-h2">Guest by guest</h2>
+      <div id="guestSheets"></div>
+    </section>
+
+    <!-- kitchen -->
+    <section class="doc-section break">
+      <h2 class="doc-h2">For the kitchen</h2>
+      <p class="doc-note">Every plate the table is eating, merged. Read this out.</p>
+      <table class="ledger">
+        <caption class="sr-only">Merged kitchen order</caption>
+        <thead>
+          <tr><th scope="col" class="num narrow">Qty</th><th scope="col">Dish</th><th scope="col">Course</th><th scope="col" class="num">Total</th></tr>
+        </thead>
+        <tbody id="kitchenBody"></tbody>
+        <tfoot id="kitchenFoot"></tfoot>
+      </table>
+    </section>
+
+    <!-- bar -->
+    <section class="doc-section">
+      <h2 class="doc-h2">For the bar</h2>
+      <table class="ledger">
+        <caption class="sr-only">Cocktail order</caption>
+        <thead>
+          <tr><th scope="col" class="num narrow">Qty</th><th scope="col">Drink</th><th scope="col">Who</th><th scope="col" class="num">Total</th></tr>
+        </thead>
+        <tbody id="barBody"></tbody>
+        <tfoot id="barFoot"></tfoot>
+      </table>
+    </section>
+
+    <p class="doc-foot" id="docFoot"></p>
+
+  </div>
+</main>
+
+<script type="module" src="summary.js"></script>
+</body>
+</html>

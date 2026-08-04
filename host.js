@@ -235,6 +235,7 @@ async function load(quiet = false) {
     });
     el('eventName').textContent = data.rules.event_name;
     el('eventMeta').textContent = `${data.rules.venue} · ${when}`;
+    el('fullOrderLink').href = `summary.html?h=${encodeURIComponent(HOST)}`;
 
     el('loading').hidden = true;
     el('failed').hidden = true;

@@ -866,3 +866,6 @@ main { position: relative; z-index: 1; }
   .btn { padding: 0 var(--s3); }
   .btn.ghost { padding: 0 var(--s2); }
 }
+
+/* Anchors styled as buttons need the flex centring buttons get for free. */
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
