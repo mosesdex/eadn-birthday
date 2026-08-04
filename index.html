@@ -40,6 +40,12 @@
       you actually want.
     </p>
 
+    <div class="voucher">
+      <p class="voucher-label">Every guest</p>
+      <p class="voucher-amount"><span id="voucherAmount">£50</span> voucher</p>
+      <p class="voucher-note">Towards your food on the night, and your drinks are covered on top. Nothing to pay, nothing to split.</p>
+    </div>
+
     <ol class="parts">
       <li>
         <div>
@@ -97,6 +103,19 @@
     </div>
   </div>
 </footer>
+
+<script type="module">
+  // Keep the headline figure tied to the live config rather than hardcoded.
+  import { rpc } from './api.js';
+  rpc('bday_menu_and_rules')
+    .then((d) => {
+      const amount = Number(d?.rules?.food_cap);
+      if (amount > 0) {
+        document.getElementById('voucherAmount').textContent = `£${amount.toFixed(0)}`;
+      }
+    })
+    .catch(() => { /* the printed £50 stands */ });
+</script>
 
 </body>
 </html>

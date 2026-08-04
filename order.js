@@ -439,6 +439,9 @@ async function boot() {
     el('bkWhere').textContent = r.address;
 
     el('briefCk').textContent = `Up to ${r.cocktail_cap}`;
+    el('voucherAmount').textContent = `£${Number(r.food_cap).toFixed(0)} voucher`;
+    el('voucherNote').textContent =
+      `Yours to spend on a starter and a main tonight. Your first ${r.cocktail_cap} drinks are covered on top, so there's nothing to pay and nothing to split.`;
     el('drinkLede').textContent =
       `Pick up to ${r.cocktail_cap} to start the night. Plenty more at the table after that.`;
 

@@ -333,3 +333,36 @@ body {
   .masthead::after,
   .foot::before { animation: none; }
 }
+
+/* ---------- the voucher: the one figure guests are told ---------- */
+
+.voucher {
+  margin: var(--s6) 0 0;
+  padding: var(--s5) var(--s6);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--paper);
+}
+
+.voucher-label {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--walnut);
+  margin: 0 0 var(--s2);
+}
+
+.voucher-amount {
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink-dark);
+  margin: 0 0 var(--s3);
+}
+
+.voucher-note {
+  margin: 0;
+  color: var(--ink-body);
+  font-size: 0.9375rem;
+  max-width: 46ch;
+}

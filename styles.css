@@ -882,3 +882,34 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 
 /* A stat that is below a floor it must clear reads as attention, not error. */
 .stat .value.under { color: var(--warn); }
+
+/* ---------- the voucher: the one figure guests are told ---------- */
+
+.voucher {
+  margin: var(--s5) 0 0;
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: var(--accent-dim);
+}
+
+.voucher-label {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--accent-strong);
+  margin: 0 0 var(--s1);
+}
+
+.voucher-amount {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 var(--s2);
+}
+
+.voucher-note {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--t-sm);
+}
